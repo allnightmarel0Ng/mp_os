@@ -51,4 +51,6 @@ logger const *server_logger::log(std::string const &text,
             (*pair.first) << text;
         }   
     }
+
+    return this;
 }
