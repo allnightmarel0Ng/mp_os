@@ -2,6 +2,10 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_LOGGER_H
 
 #include <iostream>
+#include <map>
+#include <string>
+#include <set>
+#include <fstream>
 
 class logger
 {
