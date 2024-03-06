@@ -8,7 +8,10 @@ class server_logger final:
     public logger
 {
 
+    friend class server_logger_builder;
+
 public:
+
 
     server_logger(
         server_logger const &other);
@@ -29,6 +32,17 @@ public:
     [[nodiscard]] logger const *log(
         const std::string &message,
         logger::severity severity) const noexcept override;
+
+private:
+    
+    server_logger(std::map<std::string, std::pair<std::ofstream *, 
+        std::set<logger::severity>>> const _streams_severities);
+
+    std::map<std::string, std::pair<std::ofstream *, 
+        std::set<logger::severity>>> streams_severities;
+
+    static std::map<std::string, 
+        std::pair<std::ofstream *, int>> streams_users;
 
 };
 

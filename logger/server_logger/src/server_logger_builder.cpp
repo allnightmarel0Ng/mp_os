@@ -2,45 +2,54 @@
 
 #include "../include/server_logger_builder.h"
 
-server_logger_builder::server_logger_builder()
-{
-    throw not_implemented("server_logger_builder::server_logger_builder()", "your code should be here...");
-}
+server_logger_builder::server_logger_builder() = default; // ????
 
 server_logger_builder::server_logger_builder(
-    server_logger_builder const &other)
+    server_logger_builder const &other) 
 {
-    throw not_implemented("server_logger_builder::server_logger_builder(server_logger_builder const &other)", "your code should be here...");
+    streams_severities = other.streams_severities;
 }
 
 server_logger_builder &server_logger_builder::operator=(
     server_logger_builder const &other)
 {
-    throw not_implemented("server_logger_builder &server_logger_builder::operator=(server_logger_builder const &other)", "your code should be here...");
+    return *this = server_logger_builder(other);
 }
 
 server_logger_builder::server_logger_builder(
     server_logger_builder &&other) noexcept
 {
-    throw not_implemented("server_logger_builder::server_logger_builder(server_logger_builder &&other) noexcept", "your code should be here...");
+    streams_severities = std::exchange(other.streams_severities, nullptr);
 }
 
 server_logger_builder &server_logger_builder::operator=(
     server_logger_builder &&other) noexcept
 {
-    throw not_implemented("server_logger_builder &server_logger_builder::operator=(server_logger_builder &&other) noexcept", "your code should be here...");
+    std::swap(streams_severities, other.streams_severities);
+    return *this;
 }
 
 server_logger_builder::~server_logger_builder() noexcept
 {
-    throw not_implemented("server_logger_builder::~server_logger_builder() noexcept", "your code should be here...");
+    for (auto &[stream_file_path, pair] : streams_severities) {
+        if (pair.first != nullptr) {
+            pair.first->close();
+        }
+    }
+    streams_severities.clear();
 }
 
 logger_builder *server_logger_builder::add_file_stream(
     std::string const &stream_file_path,
     logger::severity severity)
 {
-    throw not_implemented("logger_builder *server_logger_builder::add_file_stream(std::string const &stream_file_path, logger::severity severity)", "your code should be here...");
+    std::ofstream *stream;
+    stream->open(stream_file_path);
+    
+    streams_severities[stream_file_path].first = stream;
+    streams_severities[stream_file_path].second.insert(severity);
+
+    return this;
 }
 
 logger_builder *server_logger_builder::add_console_stream(
@@ -63,5 +72,6 @@ logger_builder *server_logger_builder::clear()
 
 logger *server_logger_builder::build() const
 {
-    throw not_implemented("logger *server_logger_builder::build() const", "your code should be here...");
+    server_logger _server_logger(this->streams_severities);
+    return &_server_logger;
 }

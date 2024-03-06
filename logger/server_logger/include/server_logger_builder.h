@@ -2,6 +2,7 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_BUILDER_H
 
 #include <logger_builder.h>
+#include "server_logger.h"
 
 class server_logger_builder final:
     public logger_builder
@@ -41,6 +42,11 @@ public:
     logger_builder *clear() override;
 
     [[nodiscard]] logger *build() const override;
+
+private:
+    
+    std::map<std::string, std::pair<std::ofstream *, 
+        std::set<logger::severity>>> streams_severities;
 
 };
 
