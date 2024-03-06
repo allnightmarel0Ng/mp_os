@@ -1,13 +1,21 @@
 #include "../include/server_logger.h"
 
 server_logger::server_logger(
-    std::map<std::string, std::pair<std::ofstream *, 
-    std::set<logger::severity>>> _streams_severities)   
+    std::map<std::string, std::set<logger::severity>> _streams_severities)   
 {
-    streams_severities = std::exchange(_streams_severities, nullptr);
+    for (auto &[stream_file_path, severities] : _streams_severities) {
+        if (streams_users[stream_file_path].first != nullptr) {
+            streams_users[stream_file_path].second++;
+        }
+        else {
+            streams_users[stream_file_path].second = 1;
+            streams_users[stream_file_path].first->open(stream_file_path);
+        }
 
-    for (auto &[stream_file_path, pair] : streams_severities) {
-        streams_users[stream_file_path].second++; // vot bi ne ub
+        streams_severities[stream_file_path].first = 
+            streams_users[stream_file_path].first;
+        
+        streams_severities[stream_file_path].second = severities;
     }
 }
 
@@ -39,7 +47,6 @@ server_logger::~server_logger() noexcept
     }
 
     streams_severities.clear();
-    streams_users.clear();
 }
 
 logger const *server_logger::log(std::string const &text, 
@@ -48,7 +55,7 @@ logger const *server_logger::log(std::string const &text,
     for (auto &[stream_file_path, pair] : streams_severities) {
         auto it = pair.second.find(severity);
         if (it != pair.second.end()) {
-            (*pair.first) << text;
+            *pair.first << text;
         }   
     }
 

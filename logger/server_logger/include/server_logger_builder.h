@@ -45,8 +45,7 @@ public:
 
 private:
     
-    std::map<std::string, std::pair<std::ofstream *, 
-        std::set<logger::severity>>> streams_severities;
+    std::map<std::string, std::set<logger::severity>> streams_severities;
 
 };
 

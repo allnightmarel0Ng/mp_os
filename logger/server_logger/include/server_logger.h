@@ -35,8 +35,8 @@ public:
 
 private:
     
-    server_logger(std::map<std::string, std::pair<std::ofstream *, 
-        std::set<logger::severity>>> const _streams_severities);
+    server_logger(std::map<std::string, 
+        std::set<logger::severity>> const _streams_severities);
 
     std::map<std::string, std::pair<std::ofstream *, 
         std::set<logger::severity>>> streams_severities;
