@@ -2,6 +2,8 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H
 
 #include <logger.h>
+#include <cstring>
+
 #include "server_logger_builder.h"
 
 class server_logger final:
@@ -36,14 +38,17 @@ public:
 private:
     
     server_logger(std::map<std::string, 
-        std::set<logger::severity>> const _streams_severities);
+        std::pair<key_t, std::set<logger::severity>>> const keys);
 
-    std::map<std::string, std::pair<std::ofstream *, 
-        std::set<logger::severity>>> streams_severities;
+    std::map<std::string, std::pair<int, std::set<logger::severity>>> _queues;
 
     static std::map<std::string, 
-        std::pair<std::ofstream *, int>> streams_users;
+        std::pair<int *, size_t>> _queues_users;
 
+    struct msgbuf {
+        long mtype;
+        char mtext[1024];
+    };
 };
 
-#endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H
+#endif MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H

@@ -2,8 +2,18 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_BUILDER_H
 
 #include <logger_builder.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
 #include "server_logger.h"
 
+#ifdef __linux__
+    #define CONSOLE_STREAM "/dev/tty"
+#elif _WIN32
+    #define CONSOLE_STREAM "CON"
+#else
+
+#endif
 class server_logger_builder final:
     public logger_builder
 {
@@ -45,7 +55,7 @@ public:
 
 private:
     
-    std::map<std::string, std::set<logger::severity>> streams_severities;
+    std::map<std::string, std::pair<key_t, std::set<logger::severity>>> _keys;
 
 };
 

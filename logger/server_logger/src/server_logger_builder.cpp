@@ -1,12 +1,10 @@
-#include <not_implemented.h>
-
 #include "../include/server_logger_builder.h"
 
-server_logger_builder::server_logger_builder() = default; // ????
+server_logger_builder::server_logger_builder() = default;
 
 server_logger_builder::server_logger_builder(
     server_logger_builder const &other) 
-    : streams_severities(other.streams_severities) {}
+    : _keys(other._keys) {}
 
 server_logger_builder &server_logger_builder::operator=(
     server_logger_builder const &other)
@@ -17,13 +15,13 @@ server_logger_builder &server_logger_builder::operator=(
 server_logger_builder::server_logger_builder(
     server_logger_builder &&other) noexcept
 {
-    streams_severities = std::exchange(other.streams_severities, nullptr);
+    _keys = std::exchange(other._keys, nullptr);
 }
 
 server_logger_builder &server_logger_builder::operator=(
     server_logger_builder &&other) noexcept
 {
-    std::swap(streams_severities, other.streams_severities);
+    std::swap(_keys, other._keys);
     return *this;
 }
 
@@ -33,35 +31,38 @@ logger_builder *server_logger_builder::add_file_stream(
     std::string const &stream_file_path,
     logger::severity severity)
 {
-    streams_severities[stream_file_path].insert(severity);
+    _keys[stream_file_path].first = ftok(stream_file_path.c_str(), 1);
+    _keys[stream_file_path].second.insert(severity);
     return this;
 }
 
 logger_builder *server_logger_builder::add_console_stream(
     logger::severity severity)
 {
-    throw not_implemented("logger_builder *server_logger_builder::add_console_stream(logger::severity severity)", "your code should be here...");
+    _keys[CONSOLE_STREAM].first = ftok(CONSOLE_STREAM, 1);
+    _keys[CONSOLE_STREAM].second.insert(severity);
+    return this;
 }
 
 logger_builder* server_logger_builder::transform_with_configuration(
     std::string const &configuration_file_path,
     std::string const &configuration_path)
 {
-    throw not_implemented("logger_builder* server_logger_builder::transform_with_configuration(std::string const &configuration_file_path, std::string const &configuration_path)", "your code should be here...");
+    
 }
 
 logger_builder *server_logger_builder::clear()
 {
-    for (auto &[stream_file_path, severities] : streams_severities) {
-        severities.clear();
+    for (auto &[stream_file_path, pair] : _keys) {
+        pair.second.clear();
     }
-    streams_severities.clear();
+    _keys.clear();
 
     return this;
 }
 
 logger *server_logger_builder::build() const
 {
-    server_logger _server_logger(this->streams_severities);
+    server_logger _server_logger(this->_keys);
     return &_server_logger;
 }
