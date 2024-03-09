@@ -65,11 +65,11 @@ logger const *server_logger::log(std::string const &text,
     }
 
     for (auto &[stream_file_path, pair] : _queues) {
-        if (pair.second.find(severity) != pair.second.end()) {
-            for (size_t i = 0; i < chunks_count; i++) {
-                msgsnd(pair.first, msgbuf_array + i, 
-                    sizeof(msgbuf_array + i), 0);
-            }
+        if (pair.second.find(severity) == pair.second.end()) {
+            continue;
+        }
+        for (size_t i = 0; i < chunks_count; i++) {
+            msgsnd(pair.first, msgbuf_array + i, sizeof(msgbuf_array + i), 0);
         }
     }
     return this;
