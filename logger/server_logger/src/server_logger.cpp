@@ -4,7 +4,7 @@ server_logger::server_logger(
     std::map<std::string, 
     std::pair<key_t, std::set<logger::severity>>> const keys)   
 {   
-    std::runtime_error queue_error("Unable top open queue\n");
+    std::runtime_error queue_error("Unable to open queue\n");
     
     for (auto &[stream_file_path, pair] : keys) {
         int queue = msgget(pair.first, 0666 | IPC_CREAT);
