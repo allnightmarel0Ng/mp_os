@@ -1,7 +1,6 @@
 #include "../include/server_logger.h"
 
-server_logger::server_logger(
-    std::map<std::string, 
+server_logger::server_logger(std::map<std::string, 
     std::pair<key_t, std::set<logger::severity>>> const keys)   
 {   
     std::runtime_error queue_error("Unable to open queue\n");
