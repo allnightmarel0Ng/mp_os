@@ -7,42 +7,35 @@ server_logger::server_logger(
     std::runtime_error queue_error("Unable to open queue\n");
     
     for (auto &[stream_file_path, pair] : keys) {
-        int queue = msgget(pair.first, 0666 | IPC_CREAT);
-        if (queue == -1) {
-            throw queue_error;
-        }
-        
-        _queues[stream_file_path].first = queue;
-        _queues[stream_file_path].second = pair.second;
-
         if (_queues_users.find(stream_file_path) == _queues_users.end()) {
+            int queue = msgget(pair.first, 0666 | IPC_CREAT);
+            if (queue == -1) {
+                throw queue_error;
+            }
+            
             _queues_users[stream_file_path].first = &queue;
             _queues_users[stream_file_path].second = 1;
+
+            _queues[stream_file_path].first = &queue;
         }
         else {
             _queues_users[stream_file_path].second++;
+            _queues[stream_file_path].first =
+                _queues_users[stream_file_path].first;
         } 
+
+        _queues[stream_file_path].second = pair.second;
     }
 }
 
-server_logger::server_logger(server_logger const &other) 
-    : _queues(other._queues) {}
+server_logger::server_logger(server_logger const &other) = default;
 
-server_logger &server_logger::operator=(server_logger const &other)
-{
-    return *this = server_logger(other);
-}
+server_logger &server_logger::operator=(server_logger const &other) = default;
 
-server_logger::server_logger(server_logger &&other) noexcept
-{
-    _queues = std::exchange(other._queues, nullptr);
-}
+server_logger::server_logger(server_logger &&other) noexcept = default;
 
-server_logger &server_logger::operator=(server_logger &&other) noexcept
-{
-    std::swap(_queues, other._queues);
-    return *this;
-}
+server_logger &server_logger::operator=(
+    server_logger &&other) noexcept = default;
 
 server_logger::~server_logger() noexcept
 {
@@ -69,7 +62,7 @@ logger const *server_logger::log(std::string const &text,
             continue;
         }
         for (size_t i = 0; i < chunks_count; i++) {
-            msgsnd(pair.first, msgbuf_array + i, sizeof(msgbuf_array + i), 0);
+            msgsnd(*pair.first, msgbuf_array + i, sizeof(msgbuf_array + i), 0);
         }
     }
     return this;

@@ -3,27 +3,16 @@
 server_logger_builder::server_logger_builder() = default;
 
 server_logger_builder::server_logger_builder(
-    server_logger_builder const &other) 
-    : _keys(other._keys) {}
+    server_logger_builder const &other) = default;
 
 server_logger_builder &server_logger_builder::operator=(
-    server_logger_builder const &other)
-{
-    return *this = server_logger_builder(other);
-}
+    server_logger_builder const &other) = default;
 
 server_logger_builder::server_logger_builder(
-    server_logger_builder &&other) noexcept
-{
-    _keys = std::exchange(other._keys, nullptr);
-}
+    server_logger_builder &&other) noexcept = default;
 
 server_logger_builder &server_logger_builder::operator=(
-    server_logger_builder &&other) noexcept
-{
-    std::swap(_keys, other._keys);
-    return *this;
-}
+    server_logger_builder &&other) noexcept = default;
 
 server_logger_builder::~server_logger_builder() noexcept = default;
 
@@ -63,6 +52,5 @@ logger_builder *server_logger_builder::clear()
 
 logger *server_logger_builder::build() const
 {
-    server_logger _server_logger(this->_keys);
-    return &_server_logger;
+    return new server_logger(_keys);
 }

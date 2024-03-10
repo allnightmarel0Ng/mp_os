@@ -40,7 +40,7 @@ private:
     server_logger(std::map<std::string, 
         std::pair<key_t, std::set<logger::severity>>> const keys);
 
-    std::map<std::string, std::pair<int, std::set<logger::severity>>> _queues;
+    std::map<std::string, std::pair<int *, std::set<logger::severity>>> _queues;
 
     static std::map<std::string, 
         std::pair<int *, size_t>> _queues_users;

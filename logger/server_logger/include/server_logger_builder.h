@@ -14,6 +14,7 @@
 #else
 
 #endif
+
 class server_logger_builder final:
     public logger_builder
 {
