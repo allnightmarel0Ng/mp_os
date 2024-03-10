@@ -42,8 +42,7 @@ private:
 
     std::map<std::string, std::pair<int *, std::set<logger::severity>>> _queues;
 
-    static std::map<std::string, 
-        std::pair<int *, size_t>> _queues_users;
+    static std::map<std::string, std::pair<int *, size_t>> _queues_users;
 
     struct msgbuf {
         long mtype;
