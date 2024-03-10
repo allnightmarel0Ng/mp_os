@@ -1,9 +1,14 @@
 #ifndef MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_BUILDER_H
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_BUILDER_H
 
-#include <logger_builder.h>
+#include <cstring>
+
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/types.h>
+
+#include <logger_builder.h>
+#include <ini.h>
 
 #include "server_logger.h"
 
