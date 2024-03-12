@@ -48,6 +48,11 @@ private:
         long mtype;
         char mtext[1024];
     };
+
+    struct msgbuf_info {
+        long mtype;
+        std::pair<size_t, logger::severity> minfo;
+    };
 };
 
 #endif MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H

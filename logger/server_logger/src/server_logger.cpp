@@ -39,7 +39,10 @@ server_logger &server_logger::operator=(
 server_logger::~server_logger() noexcept
 {
     for (auto &[stream_file_path, pair] : _queues) {
-        if (!--_queues_users[stream_file_path].second) {
+        if (_queues_users[stream_file_path].second == 0) {
+            continue;
+        }
+        if (--_queues_users[stream_file_path].second == 0) {
             msgctl(*_queues_users[stream_file_path].first, IPC_RMID, NULL);
         }
     }
@@ -51,17 +54,28 @@ logger const *server_logger::log(std::string const &text,
     size_t chunks_count = sizeof(text) / 1024 + 1;
     msgbuf msgbuf_array[chunks_count];
 
-    for (size_t i = 0; i < 1024; i++) {
-        strcpy(msgbuf_array[i].mtext, text.substr(i * 1024, 1024).c_str());
+    for (size_t i = 0; i < chunks_count; ++i) {
         msgbuf_array[i].mtype = 1;
+        
+        size_t pos = i * 1024;
+        size_t leftover = text.size() - pos;
+        size_t substring_size = (leftover < 1024) ? leftover : 1024;
+        
+        strcpy(msgbuf_array[i].mtext, text.substr(pos, substring_size).c_str());
     }
 
     for (auto &[stream_file_path, pair] : _queues) {
         if (pair.second.find(severity) == pair.second.end()) {
             continue;
         }
-        for (size_t i = 0; i < chunks_count; i++) {
-            msgsnd(*pair.first, msgbuf_array + i, sizeof(msgbuf_array + i), 0);
+
+        msgbuf_info _msgbuf_info = {
+            .mtype = 1, 
+            .minfo = {chunks_count, severity}};
+        msgsnd(*pair.first, &_msgbuf_info, sizeof(_msgbuf_info), 0);
+        
+        for (size_t i = 0; i < chunks_count; ++i) {
+            msgsnd(*pair.first, msgbuf_array + i, sizeof(msgbuf_array[i]), 0);
         }
     }
     return this;
