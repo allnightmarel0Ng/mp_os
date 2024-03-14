@@ -49,7 +49,7 @@ server_logger::~server_logger() noexcept
 logger const *server_logger::log(std::string const &text, 
     logger::severity severity) const noexcept
 {
-    size_t chunks_count = sizeof(text) / 1024 + 1;
+    size_t chunks_count = text.size() / 1024 + 1;
     msgbuf msgbuf_array[chunks_count];
 
     for (size_t i = 0; i < chunks_count; ++i) {
