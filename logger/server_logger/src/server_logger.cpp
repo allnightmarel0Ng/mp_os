@@ -39,11 +39,9 @@ server_logger &server_logger::operator=(
 server_logger::~server_logger() noexcept
 {
     for (auto &[stream_file_path, pair] : _queues) {
-        if (_queues_users[stream_file_path].second == 0) {
-            continue;
-        }
         if (--_queues_users[stream_file_path].second == 0) {
             msgctl(*_queues_users[stream_file_path].first, IPC_RMID, NULL);
+            _queues_users.erase(stream_file_path);
         }
     }
 }
