@@ -20,22 +20,14 @@ logger_builder *server_logger_builder::add_file_stream(
     std::string const &stream_file_path,
     logger::severity severity)
 {
-    if (_keys.find(stream_file_path) == _keys.end()) {
-        _keys[stream_file_path].first = ftok(stream_file_path.c_str(), 1);
-    }
-
-    _keys[stream_file_path].second.insert(severity);
+    _keys[stream_file_path].insert(severity);
     return this;
 }
 
 logger_builder *server_logger_builder::add_console_stream(
     logger::severity severity)
 {
-    if (_keys.find(CONSOLE_STREAM) == _keys.end()) {
-        _keys[CONSOLE_STREAM].first = ftok(CONSOLE_STREAM, 1);
-    }
-
-    _keys[CONSOLE_STREAM].second.insert(severity);
+    _keys[CONSOLE_STREAM].insert(severity);
     return this;
 }
 
@@ -88,8 +80,8 @@ logger_builder* server_logger_builder::transform_with_configuration(
 
 logger_builder *server_logger_builder::clear()
 {
-    for (auto &[stream_file_path, pair] : _keys) {
-        pair.second.clear();
+    for (auto &[path, pair] : _keys) {
+        pair.clear();
     }
     _keys.clear();
 

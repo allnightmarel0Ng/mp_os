@@ -1,10 +1,12 @@
 #ifndef MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H
 
-#include <logger.h>
 #include <cstring>
 
+#include "../../logger/include/logger.h"
 #include "server_logger_builder.h"
+
+#define MESSAGE_SIZE 1024
 
 class server_logger final:
     public logger
@@ -14,45 +16,41 @@ class server_logger final:
 
 public:
 
+    server_logger(server_logger const &other);
 
-    server_logger(
-        server_logger const &other);
+    server_logger &operator=(server_logger const &other);
 
-    server_logger &operator=(
-        server_logger const &other);
+    server_logger(server_logger &&other) noexcept;
 
-    server_logger(
-        server_logger &&other) noexcept;
-
-    server_logger &operator=(
-        server_logger &&other) noexcept;
+    server_logger &operator=(server_logger &&other) noexcept;
 
     ~server_logger() noexcept final;
 
 public:
 
-    [[nodiscard]] logger const *log(
-        const std::string &message,
+    [[nodiscard]] logger const *log(const std::string &message,
         logger::severity severity) const noexcept override;
 
 private:
     
-    server_logger(std::map<std::string, 
-        std::pair<key_t, std::set<logger::severity>>> const keys);
+    server_logger(std::map<std::string, std::set<logger::severity>> const keys);
 
-    std::map<std::string, std::pair<int *, std::set<logger::severity>>> _queues;
+#ifdef _WIN32
+    std::map<std::string, std::pair<HANDLE, std::set<logger::severity>>> _queues;
 
-    static std::map<std::string, std::pair<int *, size_t>> _queues_users;
+    static std::map<std::string, std::pair<HANDLE, size_t>> _queues_users;
 
-    struct msgbuf {
-        long mtype;
-        char mtext[1024];
-    };
+    DWORD _process_id;
+#else
+    std::map<std::string, std::pair<mqd_t, std::set<logger::severity>>> _queues;
 
-    struct msgbuf_info {
-        long mtype;
-        std::pair<size_t, logger::severity> minfo;
-    };
+    static std::map<std::string, std::pair<mqd_t, size_t>> _queues_users;
+
+    pid_t _process_id;
+#endif
+
+    size_t mutable _session_id;
+    
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_SERVER_LOGGER_H
