@@ -6,6 +6,8 @@
 #include <string>
 #include <set>
 #include <fstream>
+#include <utility>
+#include <exception>
 
 class logger
 {
