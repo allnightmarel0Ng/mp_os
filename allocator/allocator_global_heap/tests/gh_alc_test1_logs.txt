@@ -1,0 +1,5 @@
+22.03.2024  21:27:44 DEBUG START: allocator_global_heap: allocate()
+22.03.2024  21:27:44 DEBUG END: allocator_global_heap: allocate()
+22.03.2024  21:27:44 DEBUG START: allocator_global_heap: deallocate()
+22.03.2024  21:27:44 DEBUG bytes array: 
+22.03.2024  21:27:44 DEBUG END: allocator_global_heap: deallocate()
