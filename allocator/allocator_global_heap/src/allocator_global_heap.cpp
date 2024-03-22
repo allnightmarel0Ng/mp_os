@@ -3,8 +3,8 @@
 allocator_global_heap::allocator_global_heap(logger *logger)
 {
     _logger = logger;
-    // trace_with_guard("START: allocator_global_heap constructor\n");
-    // trace_with_guard("END: allocator_global_heap constructor\n");
+    trace_with_guard("START: allocator_global_heap constructor\n");
+    trace_with_guard("END: allocator_global_heap constructor\n");
 }
 
 allocator_global_heap::~allocator_global_heap() 
