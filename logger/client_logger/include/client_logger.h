@@ -44,9 +44,9 @@ private:
 
 private:
     
-    std::map<std::string, std::pair<std::ostream *, std::set<logger::severity>>> _streams;
+    std::map<std::string, std::set<logger::severity>> _streams;
 
-    static std::map<std::string, std::pair<std::ostream *, size_t>> _streams_users;
+    static std::map<std::string, std::pair<std::ofstream, size_t>> _streams_users;
 
     std::string _log_structure;
 

@@ -74,7 +74,7 @@ logger_builder *client_logger_builder::transform_with_configuration(
 }
 
 logger_builder *client_logger_builder::change_log_structure(
-    std::string const &log_structure)
+    std::string const &log_structure) noexcept
 {
     _log_structure = log_structure;
     return this;
@@ -88,5 +88,6 @@ logger_builder *client_logger_builder::clear()
 
 logger *client_logger_builder::build() const
 {
+    //std::cout << "here\n";
     return new client_logger(_paths, _log_structure);
 }

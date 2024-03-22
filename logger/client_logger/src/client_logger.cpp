@@ -1,5 +1,8 @@
 #include "../include/client_logger.h"
 
+std::map<std::string, std::pair<std::ofstream, size_t>> client_logger::_streams_users =
+    std::map<std::string, std::pair<std::ofstream, size_t>>();
+
 client_logger::client_logger(
     std::map<std::string, std::set<logger::severity>> const &paths,
     std::string const &log_structure) 
@@ -7,29 +10,18 @@ client_logger::client_logger(
 {   
     for (auto &[path, severities] : paths)
     {
+
         if (_streams_users.find(path) == _streams_users.end())
         {
-            std::streambuf *buf;
-            std::ofstream stream;
-
             if (path != "console")
             {
-                stream.open(path);
-                if (stream.is_open() == false)
+                _streams_users[path].first.open(path);
+                if (_streams_users[path].first.is_open() == false)
                 {
-                    throw std::runtime_error("Unable to open the file" + path);
+                    throw std::runtime_error("Unable to open file" + path);
                 }
-                buf = stream.rdbuf();
-                stream.close();
             }
-            else 
-            {
-                buf = std::cout.rdbuf();
-            }
-            
-            std::ostream out(buf);
 
-            _streams_users[path].first = &out;
             _streams_users[path].second = 1;
         }
         else 
@@ -37,8 +29,7 @@ client_logger::client_logger(
             _streams_users[path].second++;
         }
 
-        _streams[path].first = _streams_users[path].first;
-        _streams[path].second = severities;
+        _streams[path] = severities;
     }
 }
 
@@ -46,7 +37,7 @@ client_logger::client_logger(client_logger const &other) = default;
 
 client_logger &client_logger::operator=(client_logger const &other) = default;
 
-client_logger::client_logger(client_logger &&other) = default;
+client_logger::client_logger(client_logger &&other) noexcept = default;
 
 client_logger &client_logger::operator=(
     client_logger &&other) noexcept = default;
@@ -57,6 +48,7 @@ client_logger::~client_logger() noexcept
     {
         if (!--_streams_users[path].second)
         {
+            _streams_users[path].first.close();
             _streams_users.erase(path);
         }
     }
@@ -77,14 +69,16 @@ void client_logger::format(
 logger const *client_logger::log(std::string const &text,
     logger::severity severity) const noexcept
 {
+    std::cout << text << std::endl;
     std::string datetime = current_datetime_to_string();
     auto separator = datetime.find(' ');
     std::string date = datetime.substr(0, separator);
     std::string time = datetime.substr(separator);
+
     
-    for (auto &[path, pair] : _streams)
+    for (auto &[path, severities] : _streams)
     {
-        if (pair.second.find(severity) == pair.second.end())
+        if (severities.find(severity) == severities.end())
         {
             continue;
         }
@@ -94,6 +88,15 @@ logger const *client_logger::log(std::string const &text,
         format(log_message, "%t", time);
         format(log_message, "%s", severity_to_string(severity));
         format(log_message, "%m", text);
+
+        if (_streams_users[path].first.is_open() == true) 
+        {
+            _streams_users[path].first << log_message;
+        }
+        else
+        {
+            std::cout << log_message;
+        }
     }
     return this;
 }
