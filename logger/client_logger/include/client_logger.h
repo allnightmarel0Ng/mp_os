@@ -8,6 +8,8 @@ class client_logger final:
     public logger
 {
 
+    friend class client_logger_builder;
+
 public:
 
     client_logger(
@@ -30,6 +32,25 @@ public:
         const std::string &message,
         logger::severity severity) const noexcept override;
 
+private:
+
+    client_logger(
+        std::map<std::string, std::set<logger::severity>> const &paths,
+        std::string const &log_structure);
+    
+    void format(
+        std::string &to_format, std::string const &flag, 
+        std::string const &replace_with) const noexcept;
+
+private:
+    
+    std::map<std::string, std::pair<std::ostream *, std::set<logger::severity>>> _streams;
+
+    static std::map<std::string, std::pair<std::ostream *, size_t>> _streams_users;
+
+    std::string _log_structure;
+
+    size_t _log_structure_size;
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_CLIENT_LOGGER_H
