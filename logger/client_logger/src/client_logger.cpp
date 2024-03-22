@@ -69,7 +69,6 @@ void client_logger::format(
 logger const *client_logger::log(std::string const &text,
     logger::severity severity) const noexcept
 {
-    std::cout << text << std::endl;
     std::string datetime = current_datetime_to_string();
     auto separator = datetime.find(' ');
     std::string date = datetime.substr(0, separator);
