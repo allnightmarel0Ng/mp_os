@@ -50,14 +50,53 @@ server_logger::server_logger(
     _session_id = 0;
 }
 
-server_logger::server_logger(server_logger const &other) = default;
+server_logger::server_logger(server_logger const &other)
+    : _queues(other._queues), _process_id(other._process_id), _session_id(other._session_id)
+{
+    for (auto &[key, severities] : _queues)
+    {
+        _queues_users[key].second++;
+    }
+}
 
-server_logger &server_logger::operator=(server_logger const &other) = default;
+server_logger &server_logger::operator=(server_logger const &other) 
+{
+    if (this == &other)
+    {
+        return *this;
+    }
 
-server_logger::server_logger(server_logger &&other) noexcept = default;
+    this->server_logger::~server_logger();
+    _queues = other._queues;
+    _process_id = other._process_id;
+    _session_id = other._session_id;
 
-server_logger &server_logger::operator=(
-    server_logger &&other) noexcept = default;
+    for (auto &[key, pair] : _queues)
+    {
+        _queues_users[key].second++;
+    }
+
+    return *this;
+}
+
+server_logger::server_logger(server_logger &&other) noexcept
+    : _queues(std::move(other._queues)), _process_id(std::move(other._process_id)), _session_id(std::move(other._session_id)) {}
+
+server_logger &server_logger::operator=(server_logger &&other) noexcept
+{
+    if (this == &other)
+    {
+        return *this;
+    }
+
+    this->server_logger::~server_logger();
+
+    _queues = std::move(other._queues);
+    _process_id = std::move(other._process_id);
+    _session_id = std::move(other._session_id);
+
+    return *this;
+}
 
 server_logger::~server_logger() noexcept
 {

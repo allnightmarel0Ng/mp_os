@@ -192,9 +192,7 @@ int test1_unix()
 
 int main()
 {
-    std::cout << "here" << std::endl;
 #ifdef _WIN32
-    std::cout << "here";
     test1_win();
 
 #else

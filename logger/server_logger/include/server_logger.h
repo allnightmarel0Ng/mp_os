@@ -3,7 +3,7 @@
 
 #include <cstring>
 
-#include "../../logger/include/logger.h"
+#include <logger.h>
 #include "server_logger_builder.h"
 
 #define MESSAGE_SIZE 1024

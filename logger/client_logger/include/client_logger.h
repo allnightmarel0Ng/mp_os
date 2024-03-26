@@ -38,6 +38,8 @@ private:
         std::map<std::string, std::set<logger::severity>> const &paths,
         std::string const &log_structure);
     
+    void close_unused_streams();
+    
     void format(
         std::string &to_format, std::string const &flag, 
         std::string const &replace_with) const noexcept;

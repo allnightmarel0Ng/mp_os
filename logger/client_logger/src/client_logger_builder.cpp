@@ -21,6 +21,10 @@ logger_builder *client_logger_builder::add_file_stream(
     std::string const &stream_file_path,
     logger::severity severity)
 {
+    char resolved_path[128];
+    realpath(stream_file_path.c_str(), resolved_path);
+    std::string resolved_path_string = resolved_path;
+    
     _paths[stream_file_path].insert(severity);
     return this;
 }
@@ -28,7 +32,7 @@ logger_builder *client_logger_builder::add_file_stream(
 logger_builder *client_logger_builder::add_console_stream(
     logger::severity severity)
 {
-    _paths["console"].insert(severity);
+    _paths["/console"].insert(severity);
     return this;
 }
 
@@ -74,7 +78,7 @@ logger_builder *client_logger_builder::transform_with_configuration(
 }
 
 logger_builder *client_logger_builder::change_log_structure(
-    std::string const &log_structure) noexcept
+    std::string const &log_structure)
 {
     _log_structure = log_structure;
     return this;
@@ -88,6 +92,5 @@ logger_builder *client_logger_builder::clear()
 
 logger *client_logger_builder::build() const
 {
-    //std::cout << "here\n";
     return new client_logger(_paths, _log_structure);
 }

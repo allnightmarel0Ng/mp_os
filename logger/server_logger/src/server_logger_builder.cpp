@@ -20,7 +20,11 @@ logger_builder *server_logger_builder::add_file_stream(
     std::string const &stream_file_path,
     logger::severity severity)
 {
-    _keys[stream_file_path].insert(severity);
+    char resolved_path[128];
+    realpath(stream_file_path.c_str(), resolved_path);
+    std::string resolved_path_string = resolved_path;
+
+    _keys[resolved_path_string].insert(severity);
     return this;
 }
 
@@ -35,54 +39,46 @@ logger_builder* server_logger_builder::transform_with_configuration(
     std::string const &configuration_file_path,
     std::string const &configuration_path)
 {
-    if (configuration_file_path.substr(-4) != ".ini") {
-        std::logic_error not_ini_file("Configuration file must be .ini");
-        throw not_ini_file;
+    std::runtime_error file_error("Configuration file doesn't exist\n");
+    std::runtime_error configuration_error("Can't find configuration path\n");
+
+    nlohmann::json configuration;
+    std::ifstream configuration_file(configuration_file_path, std::ios::binary);
+    if (configuration_file.is_open() == false) 
+    {
+        throw file_error;
     }
 
-    mINI::INIFile config_file(configuration_file_path);
-    mINI::INIStructure ini;
-    config_file.read(ini);
+    if (configuration_file.peek() == EOF) 
+    {
+        throw configuration_error;
+    }
+    configuration_file >> configuration;
+    if (configuration.find(configuration_path) == configuration.end()) 
+    {
+        throw file_error;
+    }
     
-    std::logic_error empty_value("Empty value in ini file detected\n");
+    std::string filename;
+    std::string severity_string;
+    logger::severity severity_logger;
 
-    std::string streams = ini.get(configuration_path).get("streams");
-    if (streams.empty()) {
-        throw empty_value;
-    }
-
-    char *tokenized_streams = const_cast<char *>(streams.c_str());
-    char *stream_token = strtok(tokenized_streams, ", ");
-
-    std::vector<char *> tokens;
-    while (stream_token) {
-        tokens.push_back(stream_token);
-        stream_token = strtok(NULL, ", ");
-    }
-
-    for (char *stream : tokens) {
-        std::string severities = ini.get(configuration_path).get(stream);
-        if (severities.empty()) {
-            throw empty_value;
-        }
-        
-        char *tokenized_severities = const_cast<char *>(severities.c_str());
-        char *severity_token = strtok(tokenized_severities, ", ");
-
-        while (severity_token) {
-            this->add_file_stream(stream, string_to_severity(severity_token));
-            severity_token = strtok(NULL, ", ");
+    for (auto &file : configuration[configuration_path])
+    {
+        filename = file[0];
+        for (auto &severity : file[1])
+        {
+            severity_string = severity;
+            severity_logger = string_to_severity(severity_string);
+            _keys[filename].insert(severity_logger);
         }
     }
-
+    
     return this;
 }
 
 logger_builder *server_logger_builder::clear()
 {
-    for (auto &[path, pair] : _keys) {
-        pair.clear();
-    }
     _keys.clear();
 
     return this;

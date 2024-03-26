@@ -38,8 +38,7 @@ public:
         std::string const &configuration_file_path,
         std::string const &configuration_path) override;
     
-    logger_builder *change_log_structure(
-        std::string const &log_structure) noexcept;
+    logger_builder *change_log_structure(std::string const &log_structure);
 
     logger_builder *clear() override;
 
