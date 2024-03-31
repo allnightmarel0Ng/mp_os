@@ -2,6 +2,7 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_H
 
 #include <cstddef>
+#include <mutex>
 
 class allocator
 {
