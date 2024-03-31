@@ -586,7 +586,7 @@ inline std::string allocator_boundary_tags::get_typename() const noexcept
 
 void allocator_boundary_tags::delete_trusted_memory() noexcept
 {
-    ::operator delete(_trusted_memory);
+    deallocate_with_guard(_trusted_memory);
 }
 
 void allocator_boundary_tags::copy_trusted_memory(allocator_boundary_tags const &other) noexcept
