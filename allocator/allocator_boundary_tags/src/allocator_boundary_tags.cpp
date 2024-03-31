@@ -595,7 +595,7 @@ void allocator_boundary_tags::copy_trusted_memory(allocator_boundary_tags const 
     block_size_t other_size = *reinterpret_cast<block_size_t *>(other_deserialization);
 
     _trusted_memory = other.allocate_with_guard(other_size);
-    memcpy(reinterpret_cast<uint8_t *>(_trusted_memory), other_deserialization, other_size);
+    memcpy(_trusted_memory, other_deserialization, other_size);
 }
 
 allocator::block_size_t allocator_boundary_tags::get_big_meta_size() const noexcept
