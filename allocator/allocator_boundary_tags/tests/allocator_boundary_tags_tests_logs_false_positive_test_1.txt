@@ -1,0 +1,4 @@
+31.03.2024  19:52:56 INFORMATION allocator_boundary_tags: allocate: free space in trusted memory after allocation of 1000 bytes is 1968
+31.03.2024  19:52:56 INFORMATION allocator_boundary_tags: allocate: free space in trusted memory after allocation of 0 bytes is 1936
+31.03.2024  19:52:56 INFORMATION allocator_boundary_tags: deallocate: free space in trusted memory after deallocation of 1032 is 2968
+31.03.2024  19:52:56 INFORMATION allocator_boundary_tags: allocate: free space in trusted memory after allocation of 999 bytes is 1937
