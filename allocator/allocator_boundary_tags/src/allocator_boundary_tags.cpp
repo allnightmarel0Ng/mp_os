@@ -36,7 +36,7 @@ allocator_boundary_tags::allocator_boundary_tags(
     
     copy_trusted_memory(other);
 
-    ::operator delete(other._trusted_memory);
+    other.deallocate_with_guard(other._trusted_memory);
 }
 
 allocator_boundary_tags &allocator_boundary_tags::operator=(
@@ -52,7 +52,7 @@ allocator_boundary_tags &allocator_boundary_tags::operator=(
     delete_trusted_memory();
     copy_trusted_memory(other);
 
-    ::operator delete(other._trusted_memory);
+    other.deallocate_with_guard(other._trusted_memory);
     return *this;
 }
 
@@ -108,13 +108,15 @@ allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
     *reinterpret_cast<allocator **>(serialization) = parent_allocator;
     serialization += sizeof(allocator *);
 
+    allocator::construct(reinterpret_cast<std::mutex *>(serialization));
+    serialization += sizeof(std::mutex);
+
     *reinterpret_cast<block_pointer_t *>(serialization) = nullptr;
 }
 
 [[nodiscard]] void *allocator_boundary_tags::allocate(size_t value_size, size_t values_count)
 {
-    std::mutex mutex;
-    mutex.lock();
+    std::lock_guard<std::mutex> mutex_guard(get_mutex());
     
     automatic_logger auto_log(logger::severity::debug, "allocate", get_typename(), get_logger());
     
@@ -165,7 +167,6 @@ allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
     catch (std::bad_alloc &exception)
     {
         error_with_guard(get_typename() + ": allocate: unable to allocate " + std::to_string(values_count) + " elements of " + std::to_string(value_size) + " size" );
-        mutex.unlock();
         throw exception;
     }
 
@@ -173,8 +174,6 @@ allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
     information_with_guard(get_typename() + ": allocate: free space in trusted memory after allocation of " + std::to_string(values_count * value_size) + " bytes is " + std::to_string(*free_space));
 
     debug_with_guard(get_typename() + ": allocate: blocks information after allocation is " + get_blocks_visualization(get_blocks_info()));
-
-    mutex.unlock();
 
     return reinterpret_cast<uint8_t *>(result) + mini_meta_size;
 }
@@ -216,15 +215,15 @@ void *allocator_boundary_tags::allocate_first_fit(block_pointer_t first_occupied
     {
         uint8_t *next = reinterpret_cast<uint8_t *>(current_block.next);
 
-        remainder = next - empty_start - desired_size;
-        if (remainder < mini_meta_size)
-        {
-            desired_size += remainder;
-            warning_with_guard(get_typename() + ": allocate: allocation size was changed to " + std::to_string(desired_size));
-        }
-
         if (next - empty_start >= desired_size)
         {
+            remainder = next - empty_start - desired_size;
+            if (remainder < mini_meta_size)
+            {
+                desired_size += remainder;
+                warning_with_guard(get_typename() + ": allocate: allocation size was changed to " + std::to_string(desired_size));
+            }
+            
             result = meta_serialization(
                 empty_start, 
                 reinterpret_cast<block_pointer_t>(current_block.start + sizeof(block_pointer_t)),
@@ -369,9 +368,8 @@ void *allocator_boundary_tags::allocate_worst_best_fit(block_pointer_t first_occ
 
 void allocator_boundary_tags::deallocate(void *at)
 {
-    std::mutex mutex;
-    mutex.lock();
-    
+    std::lock_guard<std::mutex> mutex_guard(get_mutex());
+
     automatic_logger auto_log(logger::severity::debug, "deallocate", get_typename(), get_logger());
     
     block_meta_t at_meta = meta_deserialization(
@@ -381,7 +379,6 @@ void allocator_boundary_tags::deallocate(void *at)
     {
         std::string message = get_typename() + ": deallocate: wrong allocator instance called to deallocate memory";
         error_with_guard(message);
-        mutex.unlock();
         throw std::logic_error(message);
     }
 
@@ -422,8 +419,6 @@ void allocator_boundary_tags::deallocate(void *at)
     debug_with_guard(bytes_message);
 
     debug_with_guard(get_typename() + ": deallocate: blocks information after deallocation is " + get_blocks_visualization(get_blocks_info()));
-
-    mutex.unlock();
 }
 
 void *allocator_boundary_tags::meta_serialization(uint8_t *start, block_pointer_t prev, block_pointer_t next, block_size_t size) noexcept
@@ -600,7 +595,7 @@ void allocator_boundary_tags::copy_trusted_memory(allocator_boundary_tags const 
 
 allocator::block_size_t allocator_boundary_tags::get_big_meta_size() const noexcept
 {
-    return 2 * sizeof(block_size_t) + sizeof(logger *) + sizeof(allocator *) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(block_pointer_t);
+    return 2 * sizeof(block_size_t) + sizeof(logger *) + sizeof(allocator *) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(std::mutex) + sizeof(block_pointer_t);
 }
 
 allocator::block_size_t allocator_boundary_tags::get_mini_meta_size() const noexcept
@@ -641,4 +636,9 @@ uint8_t *allocator_boundary_tags::get_allocatable_memory_end() const noexcept
 allocator_with_fit_mode::fit_mode allocator_boundary_tags::get_fit_mode() const noexcept
 {
     return *reinterpret_cast<allocator_with_fit_mode::fit_mode *>(cast_trusted_memory() + 2 * sizeof(block_size_t));
+}
+
+std::mutex &allocator_boundary_tags::get_mutex() const noexcept
+{
+    return *reinterpret_cast<std::mutex *>(cast_trusted_memory() + get_big_meta_size() - sizeof(block_pointer_t) - sizeof(std::mutex));
 }

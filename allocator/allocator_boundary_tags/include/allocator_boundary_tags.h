@@ -114,6 +114,8 @@ private:
     uint8_t *get_allocatable_memory_end() const noexcept;
 
     allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
+
+    std::mutex &get_mutex() const noexcept;
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_BOUNDARY_TAGS_H
