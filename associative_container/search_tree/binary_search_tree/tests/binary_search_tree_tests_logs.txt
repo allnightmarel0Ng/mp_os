@@ -1,0 +1,4 @@
+13.04.2024  20:39:23 TRACE binarySearchTreePositiveTests.test11 started
+13.04.2024  20:39:23 TRACE START: binary_search_tree: constructor
+13.04.2024  20:39:23 TRACE END: binary_search_tree: constructor
+13.04.2024  20:39:23 TRACE binarySearchTreePositiveTests.test11 finished
