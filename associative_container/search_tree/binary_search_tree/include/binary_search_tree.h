@@ -967,9 +967,6 @@ protected:
     
     // region subtree rotations definition
     
-    bool is_valid(
-        typename binary_search_tree<tkey, tvalue>::node *&subtree_root) const noexcept;
-    
     void small_left_rotation(
         typename binary_search_tree<tkey, tvalue>::node *&subtree_root,
         bool validate = true) const;
@@ -3033,34 +3030,21 @@ typename binary_search_tree<tkey, tvalue>::postfix_const_reverse_iterator binary
     return binary_search_tree<tkey, tvalue>::postfix_const_reverse_iterator(nullptr, this);
 }
 
-
 // endregion iterators request implementation
 
 // region subtree rotations implementation
-
-// template<typename tkey, typename tvalue>
-// bool binary_search_tree<tkey, tvalue>::is_valid(
-//         typename binary_search_tree<tkey, tvalue>::node *&subtree_root) const noexcept
-// {
-//     if (subtree_root == nullptr)
-//     {
-//         return true;
-//     }
-
-//     if (subtree_root->left_subtree != nullptr && subtree_root->left_subtree->key > subtree_root->key || subtree_root->right_subtree != nullptr && subtree_root->right_subtree->key < subtree_root->key)
-//     {
-//         return false;
-//     }
-
-//     return is_valid(subtree_root->left_subtree) && is_valid(subtree_root->right_subtree);
-// }
 
 template<typename tkey, typename tvalue>
 void binary_search_tree<tkey, tvalue>::small_left_rotation(
     binary_search_tree<tkey, tvalue>::node *&subtree_root,
     bool validate) const
 {
-    if (validate && (subtree_root == nullptr || subtree_root->right_subtree == nullptr))
+    if (subtree_root != nullptr)
+    {
+        return;
+    }
+   
+    if (validate && subtree_root->right_subtree == nullptr)
     {
         throw std::logic_error("Tree is not valid before rotation");
     }
@@ -3076,20 +3060,20 @@ void binary_search_tree<tkey, tvalue>::small_right_rotation(
     binary_search_tree<tkey, tvalue>::node *&subtree_root,
     bool validate) const
 {
-    if (subtree_root == nullptr || subtree_root->left_subtree == nullptr)
+    if (subtree_root != nullptr)
     {
         return;
+    }
+    
+    if (validate && subtree_root->left_subtree == nullptr)
+    {
+        throw std::logic_error("Tree is not valid before rotation");
     }
 
     binary_search_tree<tkey, tvalue>::node *tmp = subtree_root->left_subtree;
     subtree_root->left_subtree = tmp->right_subtree;
     tmp->right_subtree = subtree_root;
     subtree_root = tmp;
-
-    if (validate && !is_valid(subtree_root))
-    {
-        throw std::logic_error("Tree is not valid after rotation");
-    }
 }
 
 template<typename tkey, typename tvalue>
@@ -3102,9 +3086,16 @@ void binary_search_tree<tkey, tvalue>::big_left_rotation(
         return;
     }
     
-    small_right_rotation(subtree_root->right_subtree, validate);
+    try 
+    {
+        small_right_rotation(subtree_root->right_subtree, validate);
 
-    small_left_rotation(subtree_root, validate);
+        small_left_rotation(subtree_root, validate);
+    }
+    catch (std::logic_error const &exception)
+    {
+        throw exception;
+    }
 }
 
 template<typename tkey, typename tvalue>
@@ -3117,9 +3108,16 @@ void binary_search_tree<tkey, tvalue>::big_right_rotation(
         return;
     }
     
-    small_left_rotation(subtree_root->left_subtree, validate);
+    try
+    {
+        small_left_rotation(subtree_root->left_subtree, validate);
 
-    small_right_rotation(subtree_root, validate);
+        small_right_rotation(subtree_root, validate);
+    }
+    catch (std::logic_error const &exception)
+    {
+        throw exception;
+    }    
 }
 
 template<typename tkey, typename tvalue>
@@ -3128,13 +3126,20 @@ void binary_search_tree<tkey, tvalue>::double_left_rotation(
     bool at_grandparent_first,
     bool validate) const
 {
-    if (at_grandparent_first)
+    try 
     {
-        big_right_rotation(subtree_root, validate);
+        if (at_grandparent_first)
+        {
+            big_right_rotation(subtree_root, validate);
+        }
+        else
+        {
+            big_left_rotation(subtree_root, validate);
+        }
     }
-    else
+    catch (std::logic_error const &exception)
     {
-        big_left_rotation(subtree_root, validate);
+        throw exception;
     }
 }
 
@@ -3144,13 +3149,20 @@ void binary_search_tree<tkey, tvalue>::double_right_rotation(
     bool at_grandparent_first,
     bool validate) const
 {
-    if (at_grandparent_first)
+    try 
     {
-        big_left_rotation(subtree_root, validate);
+        if (at_grandparent_first)
+        {
+            big_left_rotation(subtree_root, validate);
+        }
+        else
+        {
+            big_right_rotation(subtree_root, validate);
+        }
     }
-    else
+    catch (std::logic_error const &exception)
     {
-        big_right_rotation(subtree_root, validate);
+        throw exception;
     }
 }
 
