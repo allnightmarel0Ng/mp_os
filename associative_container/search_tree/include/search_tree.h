@@ -13,9 +13,7 @@
 #include <logger_guardant.h>
 #include <not_implemented.h>
 
-template<
-    typename tkey,
-    typename tvalue>
+template<typename tkey, typename tvalue>
 class search_tree:
     public associative_container<tkey, tvalue>,
     protected allocator_guardant,
@@ -62,11 +60,8 @@ protected:
     
 public:
     
-    virtual std::vector<typename associative_container<tkey, tvalue>::key_value_pair> obtain_between(
-        tkey const &lower_bound,
-        tkey const &upper_bound,
-        bool lower_bound_inclusive,
-        bool upper_bound_inclusive) = 0;
+    virtual std::vector<typename associative_container<tkey, tvalue>::key_value_pair> obtain_between(tkey const &lower_bound, 
+        tkey const &upper_bound, bool lower_bound_inclusive, bool upper_bound_inclusive) = 0;
 
 protected:
     
@@ -78,9 +73,7 @@ protected:
 
 //region search_tree<tkey, tvalue>::node implementation
 
-template<
-    typename tkey,
-    typename tvalue>
+template<typename tkey, typename tvalue>
 search_tree<tkey, tvalue>::common_node::common_node()
 {
     throw not_implemented("template<typename tkey, typename tvalue> search_tree<tkey, tvalue>::common_node::common_node()", "your code should be here...");
@@ -96,31 +89,20 @@ search_tree<tkey, tvalue>::common_node::~common_node() noexcept
 
 // endregion search_tree<tkey, tvalue>::node implementation
 
-template<
-    typename tkey,
-    typename tvalue>
-search_tree<tkey, tvalue>::search_tree(
-    std::function<int(tkey const &, tkey const &)> keys_comparer,
-    logger *logger,
-    allocator *allocator)
-{
-    throw not_implemented("template<typename tkey, typename tvalue> search_tree<tkey, tvalue>::search_tree(std::function<int(tkey const &, tkey const &)>, logger *, allocator *)", "your code should be here...");
-}
+template<typename tkey, typename tvalue>
+search_tree<tkey, tvalue>::search_tree(std::function<int(tkey const &, tkey const &)> keys_comparer, logger *logger, allocator *allocator)
+    : _keys_comparer(keys_comparer), _logger(logger), _allocator(allocator) {}
 
-template<
-    typename tkey,
-    typename tvalue>
+template<typename tkey, typename tvalue>
 [[nodiscard]] inline allocator *search_tree<tkey, tvalue>::get_allocator() const
 {
-    throw not_implemented("template<typename tkey, typename tvalue> [[nodiscard]] inline allocator *search_tree<tkey, tvalue>::get_allocator() const", "your code should be here...");
+    return _allocator;
 }
 
-template<
-    typename tkey,
-    typename tvalue>
+template<typename tkey, typename tvalue>
 [[nodiscard]] inline logger *search_tree<tkey, tvalue>::get_logger() const
 {
-    throw not_implemented("template<typename tkey, typename tvalue> [[nodiscard]] inline logger *search_tree<tkey, tvalue>::get_logger() const", "your code should be here...");
+    return _logger;
 }
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_SEARCH_TREE_H
