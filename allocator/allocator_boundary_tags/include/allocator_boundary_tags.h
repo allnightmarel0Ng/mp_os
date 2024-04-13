@@ -103,7 +103,7 @@ private:
 
     uint8_t *cast_trusted_memory() const noexcept;
 
-    block_pointer_t get_first_available_block() const noexcept;
+    block_pointer_t get_first_occupied_block() const noexcept;
 
     block_size_t get_full_size() const noexcept;
 

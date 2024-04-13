@@ -132,7 +132,7 @@ allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
 
     allocator_with_fit_mode::fit_mode current_fit_mode = get_fit_mode();
 
-    block_pointer_t first_occupied = get_first_available_block();
+    block_pointer_t first_occupied = get_first_occupied_block();
 
     block_pointer_t result;
 
@@ -494,7 +494,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
 
     block_size_t meta_size = get_big_meta_size();
 
-    block_pointer_t first_occupied = get_first_available_block();
+    block_pointer_t first_occupied = get_first_occupied_block();
 
     allocator_test_utils::block_info current_info;
 
@@ -608,7 +608,7 @@ uint8_t *allocator_boundary_tags::cast_trusted_memory() const noexcept
     return reinterpret_cast<uint8_t *>(_trusted_memory);
 }
 
-allocator::block_pointer_t allocator_boundary_tags::get_first_available_block() const noexcept
+allocator::block_pointer_t allocator_boundary_tags::get_first_occupied_block() const noexcept
 {
     return *reinterpret_cast<block_pointer_t *>(cast_trusted_memory() + get_big_meta_size() - sizeof(block_pointer_t));
 }
