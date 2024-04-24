@@ -6,15 +6,20 @@ allocator_boundary_tags::~allocator_boundary_tags()
     delete_trusted_memory();
 }
 
-allocator_boundary_tags::allocator_boundary_tags(
-    allocator_boundary_tags const &other)
+allocator_boundary_tags::allocator_boundary_tags(allocator_boundary_tags const &other)
 {
     automatic_logger auto_log(logger::severity::trace, "copy constructor", get_typename(), get_logger());
-    copy_trusted_memory(other);
+    try
+    {
+        copy_trusted_memory(other);
+    }
+    catch (std::bad_alloc const &exception)
+    {
+        throw exception;
+    }
 }
 
-allocator_boundary_tags &allocator_boundary_tags::operator=(
-    allocator_boundary_tags const &other)
+allocator_boundary_tags &allocator_boundary_tags::operator=(allocator_boundary_tags const &other)
 {
     automatic_logger auto_log(logger::severity::trace, "copy assignment", get_typename(), get_logger());
     
@@ -24,19 +29,23 @@ allocator_boundary_tags &allocator_boundary_tags::operator=(
     }
     
     delete_trusted_memory();
-    copy_trusted_memory(other);
+    try
+    {
+        copy_trusted_memory(other);
+    }
+    catch (std::bad_alloc const &exception)
+    {
+        throw exception;
+    }
 
     return *this;
 }
 
-allocator_boundary_tags::allocator_boundary_tags(
-    allocator_boundary_tags &&other) noexcept
+allocator_boundary_tags::allocator_boundary_tags(allocator_boundary_tags &&other) noexcept
 {
     automatic_logger auto_log(logger::severity::trace, "move constructor", get_typename(), get_logger());
     
-    copy_trusted_memory(other);
-
-    other.deallocate_with_guard(other._trusted_memory);
+    _trusted_memory = std::exchange(other._trusted_memory, nullptr);
 }
 
 allocator_boundary_tags &allocator_boundary_tags::operator=(
@@ -50,9 +59,8 @@ allocator_boundary_tags &allocator_boundary_tags::operator=(
     }
     
     delete_trusted_memory();
-    copy_trusted_memory(other);
+    _trusted_memory = std::exchange(other._trusted_memory, nullptr);
 
-    other.deallocate_with_guard(other._trusted_memory);
     return *this;
 }
 
@@ -64,16 +72,6 @@ allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
     automatic_logger auto_log(logger::severity::trace, "constructor", get_typename(), logger_instance);
 
     block_size_t meta_size = get_big_meta_size();
-    
-    if (meta_size > space_size)
-    {
-        if (logger_instance)
-        {
-            logger_instance->error("Invalid space size in constructor");
-        }
-        throw std::logic_error("Invalid space size");
-    }
-
     block_size_t full_size = meta_size + space_size;
     
     try 
@@ -84,7 +82,7 @@ allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
     }
     catch (std::bad_alloc &exception)
     {
-        if (logger_instance)
+        if (logger_instance != nullptr)
         {
             logger_instance->error("Allocation error");
         }
@@ -272,7 +270,8 @@ void *allocator_boundary_tags::allocate_worst_best_fit(block_pointer_t first_occ
     block_meta_t current_block = meta_deserialization(first_occupied);
 
     block_size_t most_suitable_difference = (fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit) 
-        ? allocatable_memory_end - allocatable_memory_start : 0;
+        ? allocatable_memory_end - allocatable_memory_start 
+        : 0;
     
     bool block_found = false;
     block_meta_t best_block;
@@ -299,8 +298,8 @@ void *allocator_boundary_tags::allocate_worst_best_fit(block_pointer_t first_occ
         difference = empty_size - desired_size;
 
         compare = (fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit) 
-            ? difference < most_suitable_difference
-            : difference > most_suitable_difference;
+            ? difference <= most_suitable_difference
+            : difference >= most_suitable_difference;
         
         if (empty_size >= desired_size && compare)
         {
@@ -319,8 +318,8 @@ void *allocator_boundary_tags::allocate_worst_best_fit(block_pointer_t first_occ
     difference = allocatable_memory_end - empty_start - desired_size;
 
     compare = (fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit) 
-        ? difference < most_suitable_difference
-        : difference > most_suitable_difference;
+        ? difference <= most_suitable_difference
+        : difference >= most_suitable_difference;
             
     if (allocatable_memory_end - empty_start >= desired_size && compare)
     {
@@ -550,8 +549,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
     return result;
 }
 
-std::string allocator_boundary_tags::get_blocks_visualization(
-    std::vector<allocator_test_utils::block_info> const &blocks_information) const noexcept
+std::string allocator_boundary_tags::get_blocks_visualization(std::vector<allocator_test_utils::block_info> const &blocks_information) const noexcept
 {
     std::string result = "| ";
 
@@ -582,14 +580,21 @@ inline std::string allocator_boundary_tags::get_typename() const noexcept
 void allocator_boundary_tags::delete_trusted_memory() noexcept
 {
     deallocate_with_guard(_trusted_memory);
+    _trusted_memory = nullptr;
 }
 
 void allocator_boundary_tags::copy_trusted_memory(allocator_boundary_tags const &other) noexcept
 {
     uint8_t *other_deserialization = reinterpret_cast<uint8_t *>(other._trusted_memory);
     block_size_t other_size = *reinterpret_cast<block_size_t *>(other_deserialization);
-
-    _trusted_memory = other.allocate_with_guard(other_size);
+    try
+    {
+        _trusted_memory = other.allocate_with_guard(other_size);
+    }
+    catch (std::bad_alloc const &exception)
+    {
+        throw exception;
+    }
     memcpy(_trusted_memory, other_deserialization, other_size);
 }
 
