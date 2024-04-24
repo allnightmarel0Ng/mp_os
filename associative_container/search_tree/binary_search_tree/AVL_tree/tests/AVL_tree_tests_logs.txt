@@ -1,0 +1,4 @@
+24.04.2024  22:41:34 TRACE AVLTreePositiveTests.test11 started
+24.04.2024  22:41:34 TRACE START: binary_search_tree: constructor
+24.04.2024  22:41:34 TRACE END: binary_search_tree: constructor
+24.04.2024  22:41:34 TRACE AVLTreePositiveTests.test11 finished
