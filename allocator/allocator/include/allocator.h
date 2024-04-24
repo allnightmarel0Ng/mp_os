@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <mutex>
+#include <cstring>
 
 class allocator
 {
