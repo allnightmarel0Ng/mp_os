@@ -1,0 +1,2 @@
+24.04.2024  21:06:58 INFORMATION allocator_buddies_system: allocate: available space in trusted memory after allocation of 40 bytes is 207
+24.04.2024  21:06:58 INFORMATION allocator_buddies_system: deallocate: free space in trusted memory after deallocation of 64 is 271
