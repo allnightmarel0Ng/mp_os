@@ -93,7 +93,12 @@ private:
 
 public:
     
-    explicit AVL_tree(std::function<int(tkey const &, tkey const &)> keys_comparer = std::less<tkey>(), allocator *allocator = nullptr, logger *logger = nullptr, typename binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy insertion_strategy = binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy::throw_an_exception, typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy = binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy::throw_an_exception);
+    explicit AVL_tree(
+        std::function<int(tkey const &, tkey const &)> keys_comparer = std::less<tkey>(), 
+        allocator *allocator = nullptr, 
+        logger *logger = nullptr, 
+        typename binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy insertion_strategy = binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy::throw_an_exception, 
+        typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy = binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy::throw_an_exception);
 
 private:
 
@@ -222,6 +227,7 @@ AVL_tree<tkey, tvalue>::insertion_template_method::insertion_template_method(AVL
 template<typename tkey, typename tvalue>
 void AVL_tree<tkey, tvalue>::insertion_template_method::balance(std::stack<typename binary_search_tree<tkey, tvalue>::node **> &path)
 {
+    automatic_logger auto_log(logger::severity::debug, "balance", "AVL_tree", dynamic_cast<AVL_tree<tkey, tvalue> const *>(this->_tree)->get_logger());
     this->balance_processing(path, dynamic_cast<AVL_tree<tkey, tvalue> const *>(this->_tree));
 }
 
@@ -235,25 +241,26 @@ AVL_tree<tkey, tvalue>::disposal_template_method::disposal_template_method(AVL_t
 template<typename tkey, typename tvalue>
 void AVL_tree<tkey, tvalue>::disposal_template_method::balance(std::stack<typename binary_search_tree<tkey, tvalue>::node **> &path)
 {
+    automatic_logger auto_log(logger::severity::debug, "balance", "AVL_tree", dynamic_cast<AVL_tree<tkey, tvalue> const *>(this->_tree)->get_logger());
     this->balance_processing(path, dynamic_cast<AVL_tree<tkey, tvalue> const *>(this->_tree));
 }
 
 template<typename tkey, typename tvalue>
 inline size_t AVL_tree<tkey, tvalue>::get_node_size() const noexcept
 {
-    return sizeof(typename AVL_tree<tkey, tvalue>::node);
+    return sizeof(AVL_tree<tkey, tvalue>::node);
 }
 
 template<typename tkey, typename tvalue>
 inline void AVL_tree<tkey, tvalue>::call_node_constructor(typename binary_search_tree<tkey, tvalue>::node *raw_space, tkey const &key, tvalue const &value) const
 {
-    allocator::construct(reinterpret_cast<typename AVL_tree<tkey, tvalue>::node *>(raw_space), key, value);
+    allocator::construct(reinterpret_cast<AVL_tree<tkey, tvalue>::node *>(raw_space), key, value);
 }
 
 template<typename tkey, typename tvalue>
 inline void AVL_tree<tkey, tvalue>::call_node_constructor(typename binary_search_tree<tkey, tvalue>::node *raw_space, tkey const &key, tvalue &&value) const
 {
-    allocator::construct(reinterpret_cast<typename AVL_tree<tkey, tvalue>::node *>(raw_space), key, std::move(value));
+    allocator::construct(reinterpret_cast<AVL_tree<tkey, tvalue>::node *>(raw_space), key, std::move(value));
 }
 
 template<typename tkey, typename tvalue>
@@ -295,8 +302,17 @@ typename binary_search_tree<tkey, tvalue>::node *AVL_tree<tkey, tvalue>::copy_no
 }
 
 template<typename tkey,typename tvalue>
-AVL_tree<tkey, tvalue>::AVL_tree(std::function<int(tkey const &, tkey const &)> keys_comparer, allocator *allocator, logger *logger, typename binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy insertion_strategy, typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy):
-    binary_search_tree<tkey, tvalue>(new AVL_tree<tkey, tvalue>::insertion_template_method(this, insertion_strategy), new typename binary_search_tree<tkey, tvalue>::obtaining_template_method(dynamic_cast<binary_search_tree<tkey, tvalue> *>(this)), new AVL_tree<tkey, tvalue>::disposal_template_method(this, disposal_strategy), keys_comparer, allocator, logger)
+AVL_tree<tkey, tvalue>::AVL_tree(
+    std::function<int(tkey const &, tkey const &)> keys_comparer, 
+    allocator *allocator, 
+    logger *logger, 
+    typename binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy insertion_strategy, 
+    typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy):
+    binary_search_tree<tkey, tvalue>(
+        new AVL_tree<tkey, tvalue>::insertion_template_method(this, insertion_strategy), 
+        new typename binary_search_tree<tkey, tvalue>::obtaining_template_method(dynamic_cast<binary_search_tree<tkey, tvalue> *>(this)),
+        new AVL_tree<tkey, tvalue>::disposal_template_method(this, disposal_strategy), 
+        keys_comparer, allocator, logger)
 {
 
 }
