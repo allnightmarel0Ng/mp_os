@@ -2496,12 +2496,21 @@ binary_search_tree<tkey, tvalue>::binary_search_tree(typename binary_search_tree
     _disposal_template(disposal_template),
     _root(nullptr) 
 {
-    automatic_logger(logger::severity::trace, "constructor", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::trace, "constructor", get_typename(), this->get_logger());
 }
 
 template<typename tkey, typename tvalue>
-binary_search_tree<tkey, tvalue>::binary_search_tree(std::function<int(tkey const &, tkey const &)> keys_comparer, allocator *allocator, logger *logger, typename binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy insertion_strategy, typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy):
-    binary_search_tree(new binary_search_tree<tkey, tvalue>::insertion_template_method(this, insertion_strategy), new binary_search_tree<tkey, tvalue>::obtaining_template_method(this), new binary_search_tree<tkey, tvalue>::disposal_template_method(this, disposal_strategy), keys_comparer, allocator, logger) 
+binary_search_tree<tkey, tvalue>::binary_search_tree(
+    std::function<int(tkey const &, tkey const &)> keys_comparer, 
+    allocator *allocator, 
+    logger *logger, 
+    typename binary_search_tree<tkey, tvalue>::insertion_of_existent_key_attempt_strategy insertion_strategy, 
+    typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy):
+    binary_search_tree(
+        new binary_search_tree<tkey, tvalue>::insertion_template_method(this, insertion_strategy), 
+        new binary_search_tree<tkey, tvalue>::obtaining_template_method(this), 
+        new binary_search_tree<tkey, tvalue>::disposal_template_method(this, disposal_strategy), 
+        keys_comparer, allocator, logger) 
 {
 
 }
@@ -2635,21 +2644,21 @@ inline size_t binary_search_tree<tkey, tvalue>::get_iterator_data_size() const n
 template<typename tkey, typename tvalue>
 binary_search_tree<tkey, tvalue>::binary_search_tree(binary_search_tree<tkey, tvalue> const &other)
 {
-    automatic_logger(logger::severity::trace, "copy constructor", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::trace, "copy constructor", get_typename(), this->get_logger());
     copy_tree(other);
 }
 
 template<typename tkey, typename tvalue>
 binary_search_tree<tkey, tvalue>::binary_search_tree(binary_search_tree<tkey, tvalue> &&other) noexcept
 {    
-    automatic_logger(logger::severity::trace, "move constructor", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::trace, "move constructor", get_typename(), this->get_logger());
     move_tree(other);
 }
 
 template<typename tkey, typename tvalue>
 binary_search_tree<tkey, tvalue> &binary_search_tree<tkey, tvalue>::operator=(binary_search_tree<tkey, tvalue> const &other)
 {    
-    automatic_logger(logger::severity::trace, "copy assignment", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::trace, "copy assignment", get_typename(), this->get_logger());
     if (this == &other)
     {
         return *this;
@@ -2664,7 +2673,7 @@ binary_search_tree<tkey, tvalue> &binary_search_tree<tkey, tvalue>::operator=(bi
 template<typename tkey, typename tvalue>
 binary_search_tree<tkey, tvalue> &binary_search_tree<tkey, tvalue>::operator=(binary_search_tree<tkey, tvalue> &&other) noexcept
 {
-    automatic_logger(logger::severity::trace, "move assignment", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::trace, "move assignment", get_typename(), this->get_logger());
     if (this == &other)
     {
         return *this;
@@ -2689,35 +2698,35 @@ binary_search_tree<tkey, tvalue>::~binary_search_tree()
 template<typename tkey, typename tvalue>
 void binary_search_tree<tkey, tvalue>::insert(tkey const &key, tvalue const &value)
 {
-    automatic_logger(logger::severity::debug, "copy insert", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::debug, "copy insert", get_typename(), this->get_logger());
     _insertion_template->insert(key, value);
 }
 
 template<typename tkey, typename tvalue>
 void binary_search_tree<tkey, tvalue>::insert(tkey const &key, tvalue &&value)
 {
-    automatic_logger(logger::severity::debug, "move insert", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::debug, "move insert", get_typename(), this->get_logger());
     _insertion_template->insert(key, std::move(value));
 }
 
 template<typename tkey, typename tvalue>
 tvalue const &binary_search_tree<tkey, tvalue>::obtain(tkey const &key)
 {
-    automatic_logger(logger::severity::debug, "obtain", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::debug, "obtain", get_typename(), this->get_logger());
     return _obtaining_template->obtain(key);
 }
 
 template<typename tkey, typename tvalue>
 std::vector<typename associative_container<tkey, tvalue>::key_value_pair> binary_search_tree<tkey, tvalue>::obtain_between(tkey const &lower_bound, tkey const &upper_bound, bool lower_bound_inclusive, bool upper_bound_inclusive)
 {
-    automatic_logger(logger::severity::debug, "obtain between", get_typename(), this->get_logger());    
+    automatic_logger auto_log(logger::severity::debug, "obtain between", get_typename(), this->get_logger());    
     return _obtaining_template->obtain_between(lower_bound, upper_bound, lower_bound_inclusive, upper_bound_inclusive);
 }
 
 template<typename tkey, typename tvalue>
 tvalue binary_search_tree<tkey, tvalue>::dispose(tkey const &key)
 {
-    automatic_logger(logger::severity::debug, "dispose", get_typename(), this->get_logger());
+    automatic_logger auto_log(logger::severity::debug, "dispose", get_typename(), this->get_logger());
     return _disposal_template->dispose(key);
 }
 
