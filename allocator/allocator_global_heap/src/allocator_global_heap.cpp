@@ -68,9 +68,13 @@ allocator_global_heap &allocator_global_heap::operator=(
 void allocator_global_heap::deallocate(void *at)
 {
     debug_with_guard("START: " + get_typename() + ": deallocate()");
+
+    if (at == nullptr)
+    {
+        return;
+    }
     
-    block_pointer_t block = reinterpret_cast<uint8_t *>(at) - 
-        sizeof(allocator *) - sizeof(size_t);
+    block_pointer_t block = reinterpret_cast<uint8_t *>(at) - sizeof(allocator *) - sizeof(size_t);
 
     if (*reinterpret_cast<allocator **>(block) != this) {
         error_with_guard(get_typename() + " wrong allocator to deallocate memory");

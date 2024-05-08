@@ -48,8 +48,7 @@ allocator_boundary_tags::allocator_boundary_tags(allocator_boundary_tags &&other
     _trusted_memory = std::exchange(other._trusted_memory, nullptr);
 }
 
-allocator_boundary_tags &allocator_boundary_tags::operator=(
-    allocator_boundary_tags &&other) noexcept
+allocator_boundary_tags &allocator_boundary_tags::operator=(allocator_boundary_tags &&other) noexcept
 {
     automatic_logger auto_log(logger::severity::trace, "move assignment", get_typename(), get_logger());
 
@@ -64,10 +63,7 @@ allocator_boundary_tags &allocator_boundary_tags::operator=(
     return *this;
 }
 
-allocator_boundary_tags::allocator_boundary_tags(size_t space_size,
-    allocator *parent_allocator,
-    logger *logger_instance,
-    allocator_with_fit_mode::fit_mode allocate_fit_mode)
+allocator_boundary_tags::allocator_boundary_tags(size_t space_size, allocator *parent_allocator, logger *logger_instance, allocator_with_fit_mode::fit_mode allocate_fit_mode)
 {
     automatic_logger auto_log(logger::severity::trace, "constructor", get_typename(), logger_instance);
 
@@ -370,6 +366,11 @@ void allocator_boundary_tags::deallocate(void *at)
     std::lock_guard<std::mutex> mutex_guard(get_mutex());
 
     automatic_logger auto_log(logger::severity::debug, "deallocate", get_typename(), get_logger());
+
+    if (at == nullptr)
+    {
+        return;
+    }
     
     block_meta_t at_meta = meta_deserialization(
         reinterpret_cast<uint8_t *>(at) - 2 * sizeof(block_pointer_t) - sizeof(block_size_t) - sizeof(allocator *));
@@ -469,8 +470,7 @@ allocator_boundary_tags::block_meta_t allocator_boundary_tags::meta_deserializat
     return meta_deserialization(reinterpret_cast<uint8_t *>(start));   
 }
 
-inline void allocator_boundary_tags::set_fit_mode(
-    allocator_with_fit_mode::fit_mode mode)
+inline void allocator_boundary_tags::set_fit_mode(allocator_with_fit_mode::fit_mode mode)
 {    
     trace_with_guard(get_typename() + ": fit mode has been changed\n");
 

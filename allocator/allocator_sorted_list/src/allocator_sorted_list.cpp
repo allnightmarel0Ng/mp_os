@@ -261,6 +261,11 @@ void allocator_sorted_list::deallocate(void *at)
     std::lock_guard<std::mutex> lock(get_mutex());
     automatic_logger auto_log(logger::severity::debug, "deallocate", get_typename(), get_logger());
 
+    if (at == nullptr)
+    {
+        return;
+    }
+
     block_meta_t at_meta(reinterpret_cast<uint8_t *>(at) - get_occupied_meta_size());
     if (at_meta._allocator != reinterpret_cast<allocator *>(this))
     {

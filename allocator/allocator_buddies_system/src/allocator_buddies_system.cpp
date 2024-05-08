@@ -97,6 +97,10 @@ allocator_buddies_system::allocator_buddies_system(size_t space_size, allocator 
     block_size_t main_meta_size = get_main_meta_size();
     if (space_size < get_order(2 * sizeof(block_pointer_t) + sizeof(int8_t)))
     {
+        if (logger_instance != nullptr)
+        {
+            logger_instance->log(get_typename() + ": unable to create allocator on such small space size", logger::severity::error);
+        }
         throw std::logic_error("Unable to create allocator on such small space size");
     }
     
@@ -256,6 +260,11 @@ void allocator_buddies_system::deallocate(void *at)
 {
     std::lock_guard<std::mutex> lock(get_mutex());
     automatic_logger auto_log(logger::severity::debug, "deallocate", get_typename(), get_logger());
+
+    if (at == nullptr)
+    {
+        return;
+    }
     
     block_meta_t at_meta(reinterpret_cast<uint8_t *>(at) - sizeof(allocator *) - sizeof(int8_t));
     
