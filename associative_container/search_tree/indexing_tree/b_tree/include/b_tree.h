@@ -20,7 +20,7 @@ public:
 
     void insert(tkey const &key, tvalue &&value) override;
 
-    tvalue const &obtain(tkey const &key) override;
+    tvalue &obtain(tkey const &key) override;
 
     tvalue dispose(tkey const &key) override;
 
@@ -342,7 +342,7 @@ void b_tree<tkey, tvalue>::insert(tkey const &key, tvalue &&value)
 }
 
 template<typename tkey, typename tvalue>
-tvalue const &b_tree<tkey, tvalue>::obtain(tkey const &key)
+tvalue &b_tree<tkey, tvalue>::obtain(tkey const &key)
 {
     auto path = this->find_path(key);
     if (path.top().second < 0)
@@ -534,7 +534,7 @@ std::vector<typename associative_container<tkey, tvalue>::key_value_pair> b_tree
 
         path.push(std::make_pair(*iterator, index < 0 ? -index - 1 : index));
 
-        if (!found)
+        if (found)
         {
             break;
         }
