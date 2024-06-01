@@ -1,6 +1,7 @@
 #ifndef MATH_PRACTICE_AND_OPERATING_SYSTEMS_BIGINT_H
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_BIGINT_H
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -166,6 +167,42 @@ private:
     int _oldest_digit;
     unsigned int *_other_digits;
     allocator *_allocator;
+
+private:
+
+    void clear() noexcept;
+
+    void copy_from(big_integer const &other);
+
+    void move_from(big_integer &&other) noexcept;
+
+private:
+
+    void initialize_from(int const *digits, size_t digits_count, allocator *allocator);
+
+    void initialize_from(std::vector<int> const &digits, size_t digits_count, allocator *allocator);
+
+    void initialize_from(std::vector<unsigned int> const &digits, size_t digits_count, allocator *allocator);
+
+    void initialize_from(std::string const &value, size_t base, allocator *allocator);
+
+private:
+
+    static std::pair<big_integer, big_integer> common_division(big_integer &lhs, big_integer const &rhs);
+
+public:
+
+    big_integer &change_sign() noexcept;
+
+    inline int get_digits_count() const noexcept;
+
+    inline int sign() const noexcept;
+
+    inline bool is_zero() const noexcept;
+
+    inline bool is_one() const noexcept;
+
+    inline unsigned int get_digit(size_t position) const noexcept;
 
 public:
 
@@ -370,6 +407,14 @@ public:
     friend std::istream &operator>>(
         std::istream &stream,
         big_integer &value);
+    
+public:
+
+    static big_integer abs(big_integer const &number) noexcept;
+
+    static big_integer max(big_integer const &one, big_integer const &another) noexcept;
+
+    static big_integer min(big_integer const &one, big_integer const &another) noexcept;
 
 private:
 
