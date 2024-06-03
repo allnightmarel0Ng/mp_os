@@ -188,7 +188,7 @@ private:
 
 private:
 
-    static std::pair<big_integer, big_integer> common_division(big_integer &lhs, big_integer const &rhs);
+    static std::pair<big_integer, big_integer> common_division(big_integer const &divisible, big_integer const &divisor);
 
 public:
 
@@ -415,6 +415,8 @@ public:
     static big_integer max(big_integer const &one, big_integer const &another) noexcept;
 
     static big_integer min(big_integer const &one, big_integer const &another) noexcept;
+
+    static big_integer factorial(big_integer const &number);
 
 private:
 

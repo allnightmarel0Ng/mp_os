@@ -4,7 +4,7 @@ big_integer &big_integer::trivial_multiplication::multiply(
     big_integer &first_multiplier,
     big_integer const &second_multiplier) const
 {
-    throw not_implemented("big_integer &big_integer::trivial_multiplication::multiply(big_integer &, big_integer const &)", "your code should be here...");
+    return first_multiplier *= second_multiplier;
 }
 
 big_integer &big_integer::Karatsuba_multiplication::multiply(
@@ -26,7 +26,13 @@ big_integer &big_integer::trivial_division::divide(
     big_integer const &divisor,
     big_integer::multiplication_rule multiplication_rule) const
 {
-    throw not_implemented("big_integer &big_integer::trivial_division::divide(big_integer &, big_integer const &, big_integer::multiplication_rule)", "your code should be here...");
+    switch (multiplication_rule)
+    {
+    
+    default:
+        return dividend /= divisor;
+    
+    }
 }
 
 big_integer &big_integer::trivial_division::modulo(
@@ -34,7 +40,11 @@ big_integer &big_integer::trivial_division::modulo(
     big_integer const &divisor,
     big_integer::multiplication_rule multiplication_rule) const
 {
-    throw not_implemented("big_integer &big_integer::trivial_division::modulo(big_integer &, big_integer const &, big_integer::multiplication_rule)", "your code should be here...");
+    switch (multiplication_rule)
+    {
+        default:
+            return dividend %= divisor;
+    }
 }
 
 big_integer &big_integer::Newton_division::divide(
@@ -227,70 +237,74 @@ void big_integer::initialize_from(std::string const &value, size_t base, allocat
     }
 }
 
-std::pair<big_integer, big_integer> big_integer::common_division(big_integer &divisible, big_integer const &rhs)
+std::pair<big_integer, big_integer> big_integer::common_division(big_integer const &dividend, big_integer const &divisor)
 {
-    if (rhs.is_zero())
+    if (divisor.is_zero())
     {
         throw std::logic_error("Can't divide by zero");
     }
-    if (divisible.is_zero())
+    if (dividend.is_zero())
     {
-        return std::make_pair(divisible, divisible);
+        return std::make_pair(dividend, dividend);
     }
 
-    if (divisible < rhs)
+    if (divisor.is_one())
     {
-        return std::make_pair(big_integer(std::vector<int> { 0 }, divisible._allocator), divisible);
+        return std::make_pair(dividend, big_integer("0"));
     }
-
-    if (divisible == rhs)
+    
+    if (dividend.sign() == -1)
     {
-        return std::make_pair(big_integer(std::vector<int> { 1 }, divisible._allocator), big_integer(std::vector<int> { 0 }, divisible._allocator));
-    }
-
-    if (divisible.sign() == -1)
-    {
-        divisible.change_sign();
-        if (rhs.sign() == -1)
+        if (divisor.sign() == -1)
         {
-            return common_division(divisible, -rhs);
+            return common_division(-dividend, -divisor);;
         }
 
-        auto result = common_division(divisible, rhs);
+        auto result = common_division(-dividend, divisor);
+        return std::make_pair(-result.first, -result.second);
+    }
+    else if (divisor.sign() == -1)
+    {
+        auto result = common_division(dividend, -divisor);
         return std::make_pair(result.first.change_sign(), result.second);
     }
-    else if (rhs.sign() == -1)
+
+    if (dividend < divisor)
     {
-        auto result = common_division(divisible, -rhs);
-        return std::make_pair(result.first.change_sign(), result.second);
+        return std::make_pair(big_integer(std::vector<int> { 0 }, dividend._allocator), dividend);
+    }
+
+    if (dividend == divisor)
+    {
+        return std::make_pair(big_integer(std::vector<int> { 1 }, dividend._allocator), big_integer(std::vector<int> { 0 }, dividend._allocator));
     }
 
     unsigned int constexpr shift = sizeof(int) << 3;
 
-    auto const lhs_digits_count = divisible.get_digits_count();
-    auto const rhs_digits_count = rhs.get_digits_count();
+    auto const lhs_digits_count = dividend.get_digits_count();
+    auto const rhs_digits_count = divisor.get_digits_count();
 
     std::vector<int> result_digits(1, 0);
     
-    big_integer remainder(std::vector<int> { 0 }, divisible._allocator);
+    big_integer remainder(std::vector<int> { 0 }, dividend._allocator);
 
     for (int i = lhs_digits_count - 1; i >= 0; --i)
     {
-        auto lhs_digit = divisible.get_digit(i);
+        auto lhs_digit = dividend.get_digit(i);
         remainder <<= shift;
         remainder += (1 << ((sizeof(int) << 3) - 1)) & lhs_digit
             ? big_integer(std::vector<int> { *reinterpret_cast<int *>(&lhs_digit), 0 }, remainder._allocator)
-            : big_integer(std::vector<int> { *reinterpret_cast<int *>(&lhs_digit) }, divisible._allocator);
+            : big_integer(std::vector<int> { *reinterpret_cast<int *>(&lhs_digit) }, dividend._allocator);
 
-        big_integer deducted(std::vector<int> { 0 }, divisible._allocator);
+        big_integer deducted(std::vector<int> { 0 }, dividend._allocator);
 
-        if (remainder >= rhs)
+        if (remainder >= divisor)
         {
             unsigned int digit = 0;
 
             for (unsigned int j = 1 << (shift - 1); j > 0; j >>= 1)
             {
-                big_integer mult_result = rhs * big_integer(std::vector<int> { *reinterpret_cast<int *>(&j), 0 }); 
+                big_integer mult_result = divisor * big_integer(std::vector<int> { *reinterpret_cast<int *>(&j), 0 }); 
 
                 if (mult_result + deducted <= remainder)
                 {
@@ -309,12 +323,22 @@ std::pair<big_integer, big_integer> big_integer::common_division(big_integer &di
     }
 
     std::reverse(result_digits.begin(), result_digits.end());
-    while (result_digits.back() == 0)
+    while (!result_digits.back() && result_digits.size())
     {
         result_digits.pop_back();
     }
 
-    return std::make_pair(big_integer(result_digits, divisible._allocator), remainder);
+    if (!result_digits.size())
+    {
+        result_digits = std::move(std::vector<int> { 0 });
+    }
+
+    if (result_digits.back() & (1 << ((sizeof(int) << 3) - 1)))
+    {
+        result_digits.push_back(0);
+    }
+
+    return std::make_pair(big_integer(result_digits, dividend._allocator), remainder);
 }
 
 big_integer &big_integer::change_sign() noexcept
@@ -632,7 +656,7 @@ big_integer &big_integer::operator-=(big_integer const &other)
 
     unsigned int borrow = 0;
 
-    std::vector<unsigned int> result_digits(digits_count, 0);
+    std::vector<int> result_digits(digits_count, 0);
     for(int i = 0; i < digits_count; ++i)
     {
         unsigned int first_value_digit = get_digit(i);
@@ -653,7 +677,6 @@ big_integer &big_integer::operator-=(big_integer const &other)
         else if (first_value_digit < second_value_digit + borrow)
         {
             *reinterpret_cast<unsigned int *>(&result_digits[i]) = first_value_digit + (UINT32_MAX - second_value_digit - borrow) + 1;
-
             borrow = 1;
         }
         else
@@ -663,9 +686,14 @@ big_integer &big_integer::operator-=(big_integer const &other)
         }
     }
 
-    while (!result_digits.back())
+    while (!result_digits.back() && result_digits.size())
     {
         result_digits.pop_back();
+    }
+
+    if (!result_digits.size())
+    {
+        result_digits = std::move(std::vector<int> { 0 });
     }
 
     if (result_digits.back() & (1 << ((sizeof(int) << 3) - 1)))
@@ -742,36 +770,45 @@ big_integer &big_integer::operator*=(big_integer const &other)
     int constexpr mask = (1 << shift) - 1;
 
     std::vector<int> result_digits(max_digits_count, 0);
-    std::vector<unsigned int> result_digits_halfs(2 * max_digits_count, 0);
+    std::vector<unsigned int> half_digits_result(2 * max_digits_count, 0);
 
     for (int i = 0; i < 2 * first_digits_count; ++i)
     {
-        unsigned int first_value_digit = get_digit(i / 2);
-        unsigned int first = i & 1 
-            ? (first_value_digit >> shift) & mask 
-            : first_value_digit & mask;
+        unsigned int lhs_digit = get_digit(i / 2);
+        unsigned int lhs_digit_half = i & 1 
+            ? lhs_digit >> shift 
+            : lhs_digit & mask;
 
         for (int j = 0; j < 2 * second_digits_count; ++j)
         {
-            unsigned int second_value_digit = other.get_digit(j / 2);
-            unsigned int second = j & 1 
-                ? second_value_digit >> shift 
-                : second_value_digit & mask;
+            unsigned int rhs_digit = other.get_digit(j / 2);
+            unsigned int rhs_digit_half = j & 1 
+                ? rhs_digit >> shift 
+                : rhs_digit & mask;
 
-            operation_result += first * second;
-            result_digits_halfs[i + j] += (operation_result & mask);
-            operation_result >>= shift;
+            operation_result += lhs_digit_half * rhs_digit_half;
+            half_digits_result[i + j] += operation_result;
+            operation_result = half_digits_result[i + j] >> shift;
+            half_digits_result[i + j] &= mask;
         }
+
+        half_digits_result[i + 2 * second_digits_count] = operation_result;
+        operation_result = 0;
     }
 
     for (int i = 0; i < max_digits_count; ++i)
     {
-        result_digits[i] = (result_digits_halfs[2 * i + 1] << shift) + result_digits_halfs[2 * i];
+        result_digits[i] = (half_digits_result[2 * i + 1] << shift) + half_digits_result[2 * i];
     }
 
-    while (result_digits.back() == 0)
+    while (!result_digits.back() && result_digits.size())
     {
         result_digits.pop_back();
+    }
+
+    if (!result_digits.size())
+    {
+        result_digits = std::move(std::vector<int> { 0 });
     }
 
     if (result_digits.back() & (1 << ((sizeof(int) << 3) - 1)))
@@ -1003,7 +1040,7 @@ big_integer &big_integer::operator>>=(size_t shift)
     if (digits_count <= big_shift)
     {
         clear();
-        initialize_from(std::vector<int>{0}, 1, _allocator);
+        initialize_from(std::vector<int>{ 0 }, 1, _allocator);
 
         return *this;
     }
@@ -1020,15 +1057,18 @@ big_integer &big_integer::operator>>=(size_t shift)
         remainder = power - shift == power ? 0 : value_digit << (power - shift);
     }
 
-    while (result_digits.back() == 0)
+    while (result_digits.back() == 0 && result_digits.size())
     {
         result_digits.pop_back();
     }
 
-    auto result_digits_count = result_digits.size();
+    if (!result_digits.size())
+    {
+        result_digits = std::move(std::vector<int> { 0 });
+    }
 
     clear();
-    initialize_from(result_digits, result_digits_count, _allocator);
+    initialize_from(result_digits, result_digits.size(), _allocator);
 
     return *this;
 }
@@ -1052,7 +1092,15 @@ big_integer &big_integer::multiply(
     allocator *allocator,
     big_integer::multiplication_rule multiplication_rule)
 {
-    throw not_implemented("big_integer &big_integer::multiply(big_integer &, big_integer const &, allocator *, big_integer::multiplication_rule)", "your code should be here...");
+    first_multiplier._allocator = allocator;
+    
+    switch (multiplication_rule)
+    {
+    
+    default:
+        return trivial_multiplication().multiply(first_multiplier, second_multiplier);
+    
+    }
 }
 
 big_integer big_integer::multiply(
@@ -1061,7 +1109,16 @@ big_integer big_integer::multiply(
     allocator *allocator,
     big_integer::multiplication_rule multiplication_rule)
 {
-    throw not_implemented("big_integer big_integer::multiply(big_integer const &, big_integer const &, allocator *, big_integer::multiplication_rule)", "your code should be here...");
+    big_integer copy = first_multiplier;
+    copy._allocator = allocator;
+    
+    switch (multiplication_rule)
+    {
+    
+    default:
+        return trivial_multiplication().multiply(copy, second_multiplier);
+    
+    }
 }
 
 big_integer &big_integer::divide(
@@ -1071,7 +1128,15 @@ big_integer &big_integer::divide(
     big_integer::division_rule division_rule,
     big_integer::multiplication_rule multiplication_rule)
 {
-    throw not_implemented("big_integer &big_integer::divide(big_integer &, big_integer const &, allocator *, big_integer::division_rule, big_integer::multiplication_rule)", "your code should be here...");
+    dividend._allocator = allocator;
+
+    switch (division_rule)
+    {
+    
+    default:
+        return trivial_division().divide(dividend, divisor, multiplication_rule);
+
+    }
 }
 
 big_integer big_integer::divide(
@@ -1081,7 +1146,16 @@ big_integer big_integer::divide(
     big_integer::division_rule division_rule,
     big_integer::multiplication_rule multiplication_rule)
 {
-    throw not_implemented("big_integer big_integer::divide(big_integer const &, big_integer const &, allocator *, big_integer::division_rule, big_integer::multiplication_rule)", "your code should be here...");
+    big_integer copy = dividend;
+    copy._allocator = allocator;
+
+    switch (division_rule)
+    {
+    
+    default:
+        return trivial_division().divide(copy, divisor, multiplication_rule);
+
+    }
 }
 
 big_integer &big_integer::modulo(
@@ -1091,7 +1165,15 @@ big_integer &big_integer::modulo(
     big_integer::division_rule division_rule,
     big_integer::multiplication_rule multiplication_rule)
 {
-    throw not_implemented("big_integer &big_integer::modulo(big_integer &, big_integer const &, allocator *, big_integer::division_rule, big_integer::multiplication_rule)", "your code should be here...");
+    dividend._allocator = allocator;
+
+    switch (division_rule)
+    {
+    
+    default:
+        return trivial_division().modulo(dividend, divisor, multiplication_rule);
+
+    }
 }
 
 big_integer big_integer::modulo(
@@ -1101,7 +1183,16 @@ big_integer big_integer::modulo(
     big_integer::division_rule division_rule,
     big_integer::multiplication_rule multiplication_rule)
 {
-    throw not_implemented("big_integer big_integer::modulo(big_integer const &, big_integer const &, allocator *, big_integer::division_rule, big_integer::multiplication_rule)", "your code should be here...");
+    big_integer copy = dividend;
+    copy._allocator = allocator;
+
+    switch (division_rule)
+    {
+    
+    default:
+        return trivial_division().modulo(copy, divisor, multiplication_rule);
+
+    }
 }
 
 big_integer big_integer::abs(big_integer const &number) noexcept
@@ -1117,6 +1208,21 @@ big_integer big_integer::max(big_integer const &one, big_integer const &another)
 big_integer big_integer::min(big_integer const &one, big_integer const &another) noexcept
 {
     return one < another ? one : another;
+}
+
+big_integer big_integer::factorial(big_integer const &number)
+{
+    if (number < big_integer("0"))
+    {
+        throw std::invalid_argument("Attempt to get factorial from negative number");
+    }
+    
+    if (number.is_zero() || number.is_one())
+    {
+        return big_integer("1");
+    }
+
+    return number * factorial(number - big_integer("1"));
 }
 
 std::ostream &operator<<(std::ostream &stream, big_integer const &value)
@@ -1144,9 +1250,14 @@ std::ostream &operator<<(std::ostream &stream, big_integer const &value)
         auto pair = big_integer::common_division(big_number, big_integer(std::vector<int> { big_modulus } , value._allocator));
         
         unsigned int tmp = pair.second.get_digit(0);
-        for (size_t i = 0; i < big_modulus_zeros_cnt && (tmp || !pair.first.is_zero()); ++i)
+        for (size_t i = 0; i < big_modulus_zeros_cnt; ++i)
         {
-            result.push_back('0' + tmp % 10);
+            if (!tmp && pair.first.is_zero())
+            {
+                break;
+            }
+
+            result.push_back(tmp % 10 + '0');
             tmp /= 10;
         }
         

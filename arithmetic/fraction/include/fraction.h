@@ -11,11 +11,25 @@ private:
     big_integer _numerator;
     big_integer _denominator;
 
+private:
+
+    static big_integer greatest_common_divisor(big_integer const &one, big_integer const &another) noexcept;
+
+    fraction &normalize_fraction() noexcept;
+
+    static int factorial(int number) noexcept;
+
+    static fraction abs(fraction number) noexcept;
+
+    static int binary_power(int base, int power) noexcept;
+
 public:
 
     fraction(
         big_integer &&numerator,
         big_integer &&denominator);
+
+    fraction(big_integer const &numerator, big_integer const &denominator);
 
 public:
 
@@ -46,6 +60,8 @@ public:
 
     fraction operator-(
         fraction const &other) const;
+    
+    fraction &operator-();
 
     fraction &operator*=(
         fraction const &other);
