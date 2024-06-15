@@ -532,7 +532,10 @@ std::vector<typename associative_container<tkey, tvalue>::key_value_pair> b_tree
             }
         }
 
-        path.push(std::make_pair(*iterator, index < 0 ? -index - 1 : index));
+        if ((index < 0 ? -index - 1 : index) < (*iterator)->virtual_size - 1)
+        {
+            path.push(std::make_pair(*iterator, index < 0 ? -index - 1 : index));
+        }
 
         if (found)
         {
@@ -544,12 +547,11 @@ std::vector<typename associative_container<tkey, tvalue>::key_value_pair> b_tree
             iterator = (*iterator)->subtrees - index - 1;    
         }
         
-        if (*iterator == nullptr && this->_keys_comparer((path.top().first)->keys_and_values[index].key, upper_bound) < (lower_bound_inclusive ? 0 : 1))
+        if (*iterator == nullptr && index >= 0 && this->_keys_comparer((path.top().first)->keys_and_values[index].key, upper_bound) < (lower_bound_inclusive ? 0 : 1))
         {
             path = std::move(std::stack<std::pair<typename search_tree<tkey, tvalue>::common_node *, int>>());
         }
     }
-    
     auto it = infix_iterator(path);
     while (it != this->end_infix() && this->_keys_comparer(upper_bound, std::get<2>(*it)) > (upper_bound_inclusive ? -1 : 0))
     {

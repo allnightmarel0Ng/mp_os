@@ -86,7 +86,7 @@ TEST(positive_tests, test3)
         });
 
     big_integer bigint_1("32850346459076457453464575686784654");
-    big_integer bigint_2("12342357553253");
+    big_integer bigint_2("0");
 
     big_integer result_of_remainder = bigint_1 % bigint_2;
 

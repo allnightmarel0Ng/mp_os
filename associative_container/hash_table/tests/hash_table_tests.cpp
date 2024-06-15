@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
+#include <hash_table.h>
 
-int main(
-    int argc,
-    char **argv)
+int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
 

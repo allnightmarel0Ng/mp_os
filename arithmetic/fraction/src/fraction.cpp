@@ -202,7 +202,6 @@ fraction fraction::sin(fraction const &epsilon) const
 {
     if (fraction::abs(*this) > fraction(big_integer("1"), big_integer("1")))
     {
-        std::cout << fraction::abs(*this) << std::endl;
         throw std::invalid_argument("To compute sin fraction must be between [-1, 1]");
     }
 
@@ -425,4 +424,14 @@ fraction fraction::ln(fraction const &epsilon) const
 fraction fraction::lg(fraction const &epsilon) const
 {
     return ln(epsilon) / (fraction(big_integer("10"), big_integer("1"))).ln(epsilon);
+}
+
+big_integer fraction::get_numerator() const noexcept
+{
+    return _numerator;
+}
+
+big_integer fraction::get_denominator() const noexcept
+{
+    return _denominator;
 }

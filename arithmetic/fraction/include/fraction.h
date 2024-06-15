@@ -167,6 +167,12 @@ public:
     fraction lg(
         fraction const &epsilon) const;
 
+public:
+
+    big_integer get_numerator() const noexcept;
+
+    big_integer get_denominator() const noexcept;
+
 };
 
 #endif //MP_OS_FRACTION_H

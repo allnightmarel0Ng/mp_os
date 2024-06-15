@@ -11,7 +11,58 @@ big_integer &big_integer::Karatsuba_multiplication::multiply(
     big_integer &first_multiplier,
     big_integer const &second_multiplier) const
 {
-    throw not_implemented("big_integer &big_integer::Karatsuba_multiplication::multiply(big_integer &, big_integer const &)", "your code should be here...");
+    if (first_multiplier.is_zero() || second_multiplier.is_one())
+    {
+        return first_multiplier;
+    }
+    if (second_multiplier.is_zero() || first_multiplier.is_one())
+    {
+        return first_multiplier = second_multiplier;
+    }
+    
+    auto get_multiplier_half = [](big_integer const &multiplier, size_t size, size_t offset = 0)
+        {
+            std::vector<int> result(size, 0);
+            for (size_t i = 0; i < size; ++i)
+            {
+                *reinterpret_cast<unsigned int *>(&result[i]) = multiplier.get_digit(i + offset);
+            }
+            
+            while (!result.back() && !result.empty())
+            {
+                result.pop_back();
+            }
+
+            if (result.empty())
+            {
+                result = std::move(std::vector<int> { 0 });
+            }
+
+            return result;
+        };
+    
+    auto digits_count = std::max(first_multiplier.get_digits_count(), second_multiplier.get_digits_count());
+    if (digits_count <= 4)
+    {
+        return first_multiplier *= second_multiplier;
+    }
+
+    auto half_digits_count = digits_count / 2;
+    
+    auto first_multiplier_right = big_integer(get_multiplier_half(first_multiplier, half_digits_count), first_multiplier._allocator);
+    auto first_multiplier_left = big_integer(get_multiplier_half(first_multiplier, half_digits_count, half_digits_count), first_multiplier._allocator);
+
+    auto second_multiplier_right = big_integer(get_multiplier_half(second_multiplier, half_digits_count), first_multiplier._allocator);
+    auto second_multiplier_left = big_integer(get_multiplier_half(second_multiplier, half_digits_count, half_digits_count), first_multiplier._allocator);
+
+    big_integer first_multiplier_sum = first_multiplier_left + first_multiplier_right;
+    big_integer second_multiplier_sum = second_multiplier_left + second_multiplier_right;
+
+    auto coefficient_0 = multiply(first_multiplier_left, second_multiplier_left);
+    auto coefficient_1 = multiply(first_multiplier_right, second_multiplier_right);
+    auto coefficient_2 = multiply(first_multiplier_sum, second_multiplier_sum);
+
+    return first_multiplier = (coefficient_0 << ((sizeof(int) << 3) * digits_count)) + ((coefficient_2 - coefficient_1 - coefficient_0) << ((sizeof(int) << 3) * (half_digits_count))) + coefficient_1;
 }
 
 big_integer &big_integer::Schonhage_Strassen_multiplication::multiply(
@@ -641,7 +692,7 @@ big_integer &big_integer::operator-=(big_integer const &other)
     {
         if (other.sign() == 1)
         {
-            return (-*this + other).change_sign();
+            return *this = (-*this + other).change_sign();
         }
 
         return *this = (-other) - (-*this);
@@ -745,8 +796,7 @@ big_integer &big_integer::operator*=(big_integer const &other)
     if (sign() == -1 && other.sign() == -1)
     {
         change_sign();
-        *this *= -other;
-        return *this;
+        return *this *= -other;
     }
     else if (sign() == -1)
     {
@@ -860,8 +910,7 @@ big_integer big_integer::operator%(big_integer const &other) const
     return big_integer(*this) %= other;
 }
 
-big_integer big_integer::operator%(
-    std::pair<big_integer, allocator *> const &other) const
+big_integer big_integer::operator%(std::pair<big_integer, allocator *> const &other) const
 {
     return *this;
 }
@@ -881,7 +930,7 @@ big_integer big_integer::operator~() const
 
 big_integer &big_integer::operator&=(big_integer const &other)
 {
-    auto const digits_count = get_digits_count();
+    auto const digits_count = std::min(get_digits_count(), other.get_digits_count());
     std::vector<int> result_digits(digits_count, 0);
 
     for (size_t i = 0; i < digits_count; ++i)
@@ -939,12 +988,12 @@ big_integer big_integer::operator|(std::pair<big_integer, allocator *> const &ot
 
 big_integer &big_integer::operator^=(big_integer const &other)
 {
-    auto const digits_count = get_digits_count();
+    auto const digits_count = std::max(get_digits_count(), other.get_digits_count());
     std::vector<int> result_digits(digits_count, 0);
 
     for (size_t i = 0; i < digits_count; ++i)
     {
-        result_digits[i] = get_digit(i) & other.get_digit(i); 
+        result_digits[i] = get_digit(i) ^ other.get_digit(i); 
     }
 
     clear();
@@ -955,7 +1004,7 @@ big_integer &big_integer::operator^=(big_integer const &other)
 
 big_integer big_integer::operator^(big_integer const &other) const
 {
-    return big_integer(*this) |= other;
+    return big_integer(*this) ^= other;
 }
 
 big_integer big_integer::operator^(std::pair<big_integer, allocator *> const &other) const
@@ -1097,6 +1146,8 @@ big_integer &big_integer::multiply(
     switch (multiplication_rule)
     {
     
+    case multiplication_rule::Karatsuba:
+        return Karatsuba_multiplication().multiply(first_multiplier, second_multiplier);
     default:
         return trivial_multiplication().multiply(first_multiplier, second_multiplier);
     
@@ -1115,6 +1166,8 @@ big_integer big_integer::multiply(
     switch (multiplication_rule)
     {
     
+    case multiplication_rule::Karatsuba:
+        return Karatsuba_multiplication().multiply(copy, second_multiplier);
     default:
         return trivial_multiplication().multiply(copy, second_multiplier);
     
